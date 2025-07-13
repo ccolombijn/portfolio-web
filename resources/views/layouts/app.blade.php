@@ -9,7 +9,6 @@
 </head>
 <body>
     <header>
-        @include('layouts.navigation.nav')
         @yield('header')
     </header>
     <main>

@@ -2,7 +2,8 @@
     {
         "name" : "home",
         "title" : "Home",
-        "route" : "/"
+        "route" : "/",
+        "exclude_nav" : true
     },
     {
         "name" : "about",

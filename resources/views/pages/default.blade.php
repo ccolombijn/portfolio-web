@@ -3,7 +3,10 @@
 @section('header')
     <section class="header">
         <div class="header__container">
-            {!! $header !!}
+            @include('navigation.nav')
+            <div class="header__content">
+                {!! $header !!}
+            </div>
         </div>
     </section>
 @endsection
