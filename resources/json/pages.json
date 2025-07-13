@@ -1,0 +1,14 @@
+[
+    {
+        "name" : "about",
+        "title" : "Over mij",
+        "route" : "/{name}",
+        "view" : "{name}"
+    },
+    {
+        "name" : "skills",
+        "title" : "Vaardigheden",
+        "route" : "/{name}",
+        "view" : "{name}"
+    }
+]

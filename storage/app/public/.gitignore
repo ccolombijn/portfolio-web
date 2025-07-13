@@ -1,0 +1,7 @@
+*
+!*.md
+!/md
+!/md/*
+!*.json
+!/json
+!.gitignore

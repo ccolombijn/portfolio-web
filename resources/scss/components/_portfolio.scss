@@ -1,0 +1,37 @@
+.portfolio {
+    @apply py-16;
+    //md
+    @apply md:py-24;
+
+    &__container {
+        @apply container mx-auto px-4;
+    }
+
+    &__intro {
+        @apply text-center max-w-2xl mx-auto mb-12;
+
+        h2 {
+            @apply text-3xl font-bold mb-4;
+            //md
+            @apply md:text-4xl;
+        }
+
+        p {
+            @apply text-lg text-gray-600;
+        }
+    }
+
+    &__grid {
+        @apply grid grid-cols-1 gap-8;
+        //lg
+        @apply lg:grid-cols-3;
+        //md
+        @apply md:grid-cols-2;
+    }
+
+    &__card {
+        @apply bg-white rounded-lg shadow-md overflow-hidden transition-transform duration-300;
+        //hover
+        @apply hover:scale-105;
+    }
+}

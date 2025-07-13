@@ -1,0 +1,26 @@
+[
+    {
+        "name" : "about",
+        "title" : "Over mij",
+        "route" : "/{name}",
+        "view" : "{name}"
+    },
+    {
+        "name" : "skills",
+        "title" : "Vaardigheden",
+        "route" : "/{name}",
+        "view" : "{name}"
+    },
+    {
+        "name": "portfolio.index",
+        "title": "Portfolio",
+        "route": "/portfolio",
+        "controller": "PortfolioController@index"
+    },
+    {
+        "name": "contact.show",
+        "title": "Contact",
+        "route": "/contact",
+        "controller": "ContactController@show"
+    }
+]
