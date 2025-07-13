@@ -1,15 +1,18 @@
 [
     {
+        "name" : "home",
+        "title" : "Home",
+        "route" : "/"
+    },
+    {
         "name" : "about",
         "title" : "Over mij",
-        "route" : "/{name}",
-        "view" : "{name}"
+        "route" : "/about"
     },
     {
         "name" : "skills",
         "title" : "Vaardigheden",
-        "route" : "/{name}",
-        "view" : "{name}"
+        "route" : "/skills"
     },
     {
         "name": "portfolio.index",

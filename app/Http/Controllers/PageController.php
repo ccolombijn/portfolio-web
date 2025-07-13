@@ -15,20 +15,24 @@ class PageController extends Controller
      */
     public function show(array $page): View
     {
+       
         return view('pages.default', [
             'page' => $page,
-            'content' => $this->getContent($page),
+            'header' => $this->getMarkdownHTML('header',$page),
+            'content' => $this->getMarkdownHTML('content',$page),
+            'footer' => $this->getMarkdownHTML('footer',$page)
         ]);
     }
     /**
      * Get the page markdown content and parse to html
      */
-    private function getContent(array $page) : string
+    private function getMarkdownHTML(string $part,array $page) : string
     {
-        $filePath = storage_path('app/public/md/' . $page['name'] . '.md');
+        $filePath = storage_path('app/public/md/' . $part . '/' . $page['name'] . '.md');
 
         if (!File::exists($filePath)) {
-            abort(404, 'Content file not found.');
+            //abort(404, 'Content file not found.');
+            $filePath = storage_path('app/public/md/' . $part . '/default.md');
         }
         $markdownContent = File::get($filePath);
         $environment = new Environment(); // Set environment
