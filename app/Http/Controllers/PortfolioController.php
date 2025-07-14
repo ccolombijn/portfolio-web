@@ -24,9 +24,9 @@ class PortfolioController extends Controller
      */
     public function show(array $page, Project $project)
     {
-         return view('portfolio.show', [
+         return view('pages.detail', [
             'page' => $page,
-            'project' => $project,
+            'item' => $project,
          ]);
     }
 }

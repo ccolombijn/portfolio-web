@@ -11,11 +11,10 @@ use League\CommonMark\MarkdownConverter;
 class PageController extends Controller
 {
     /**
-     *
+     * Default page view elements
      */
     public function show(array $page): View
     {
-       
         return view('pages.default', [
             'page' => $page,
             'header' => $this->getMarkdownHTML('header',$page),
@@ -24,7 +23,7 @@ class PageController extends Controller
         ]);
     }
     /**
-     * Get the page markdown content and parse to html
+     * Get page markdown content and parse to html
      */
     private function getMarkdownHTML(string $part,array $page) : string
     {
