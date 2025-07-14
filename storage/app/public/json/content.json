@@ -1,0 +1,10 @@
+{
+    "cta" : {
+        "title" : "Neem contact met me op",
+        "text" : "Geinteresseerd? Ik ga graag met je in gespek over wat we voor elkaar kunnen betekenen.",
+        "link1" : "contact",
+        "link1_text" : "Stuur me een bericht",
+        "link2" : "about",
+        "link2_text" : "Meer over mij"
+    }
+}
