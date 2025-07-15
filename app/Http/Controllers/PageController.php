@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Support\Facades\File;
-use Illuminate\Support\Facades\View;
+use Illuminate\Support\Facades\Log; 
 use League\CommonMark\Environment\Environment;
 use League\CommonMark\Extension\CommonMark\CommonMarkCoreExtension;
 use League\CommonMark\MarkdownConverter;
@@ -61,24 +61,41 @@ class PageController extends Controller
     private function insertComponents(string $htmlContent): string 
     {
         // Find matches {[component]}
-        preg_match_all('/{([\\s\\S]*?)}/', $htmlContent, $matches);
-        if (!empty($matches[1])) {
-            foreach ($matches[1] as $index => $componentName) {
-                $fullTag = $matches[0][$index];
-                $component = 'components.' . $componentName;
-                if(View::exists($component)){
-                    if (isset($this->content[$componentName])) {
-                        // Render the component view with content data
-                        $replacement = view($component, $this->content[$componentName])->render(); 
-                    } else {
-                        $replacement = view('components.' . $componentName)->render();
-                    }
-                } else {
-                    $replacement = '[error: ' . $component. ' does not exist]';
-                }
+        $pattern = '/{\[\s*([a-zA-Z0-9_-]+)\s*([^\]]*)?\s*\]}/';
+
+        preg_match_all($pattern, $htmlContent, $matches, PREG_SET_ORDER);
+
+        foreach ($matches as $match) {
+            $fullTag = $match[0];
+            $componentName = $match[1];
+            $attributesString = $match[2] ?? '';
+            $defaultData = $this->content[$componentName] ?? [];
+            $overrides = $this->parseAttributes($attributesString);
+            $componentData = array_merge($defaultData, $overrides);
+            if (view()->exists('components.' . $componentName)) {
+                $replacement = view('components.' . $componentName, $componentData)->render();
                 $htmlContent = str_replace($fullTag, $replacement, $htmlContent);
+            } else {
+                Log::warning("Component view not found: 'components.{$componentName}'");
+                $htmlContent = str_replace($fullTag, '', $htmlContent);
             }
         }
         return $htmlContent;
+    }
+
+    private function parseAttributes(string $str): array
+    {
+        $attributes = [];
+        $pattern = '/([a-zA-Z0-9_-]+)\s*=\s*(?:"([^"]*)"|\'([^\']*)\'|([^\s\]]+))/';
+        preg_match_all($pattern, $str, $matches, PREG_SET_ORDER);
+
+        foreach ($matches as $match) {
+            $key = $match[1];
+            // The value is in one of the capturing groups for ", ', or no quotes.
+            $value = $match[2] ?: ($match[3] ?: $match[4]);
+            $attributes[$key] = $value;
+        }
+
+        return $attributes;
     }
 }
