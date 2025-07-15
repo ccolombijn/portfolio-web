@@ -10,6 +10,7 @@ use League\CommonMark\MarkdownConverter;
 
 class PageController extends Controller
 {
+
     /**
      * @var array
      */
@@ -17,11 +18,11 @@ class PageController extends Controller
 
     public function __construct(array $content)
     {
-        $this->content = $content;
+        $this->content = $content; // Get content data 
     }
 
     /**
-     * Default show page
+     * Returns default page view
      */
     public function show(array $page)
     {
@@ -38,24 +39,50 @@ class PageController extends Controller
     }
 
     /**
-     * Processes markdown and replaces component placeholders with arguments.
+     * Processes markdown and replaces component placeholders with arguments
      */
     private function getMarkdownHTML(string $part, array $page): string
     {
-        $filePath = storage_path('app/public/md/' . $part . '/' . $page['name'] . '.md');
-        if (!File::exists($filePath)) {
-            $filePath = storage_path('app/public/md/' . $part . '/default.md');
+        $pageName = $page['name'];
+
+        // Possible file paths in order of priority
+        $possiblePaths = [
+            storage_path("app/public/md/{$part}/{$pageName}.md"),
+            storage_path("app/public/md/{$part}/default.md"),
+            resource_path("md/{$part}/{$pageName}.md"),
+            resource_path("md/{$part}/default.md"),
+        ];
+
+        $filePath = '';
+       
+        foreach ($possiblePaths as $path) {
+            if (File::exists($path)) {
+                $filePath = $path;
+                break; 
+            }
         }
-        // If even the default file doesn't exist, return an empty string.
-        if (!File::exists($filePath)) {
+
+        if (empty($filePath)) {
             return '';
         }
-
+        // Get the content
         $markdownContent = File::get($filePath);
+        // Insert components
+        $markdownContent = $this->insertComponents($markdownContent);
+        // Convert to HTML
+        $environment = new Environment();
+        $environment->addExtension(new CommonMarkCoreExtension());
+        $converter = new MarkdownConverter($environment);
+        $htmlContent = $converter->convert($markdownContent);
 
-        // --- REVISED LOGIC ---
-        // First, find and replace component tags in the RAW markdown content.
-        // Corrected regex to use {component args} syntax, not {[...]}
+        return $htmlContent;
+    }
+
+    /**
+     * Inserts components in given markdown content
+     */
+    private function insertComponents(string $markdownContent): string
+    {
         $pattern = '/{([a-zA-Z0-9_-]+)\s*([^}]*)?}/';
         preg_match_all($pattern, $markdownContent, $matches, PREG_SET_ORDER);
 
@@ -74,7 +101,6 @@ class PageController extends Controller
 
                 $replacement = '';
                 if (view()->exists('components.' . $componentName)) {
-                    // The replacement is the pre-rendered HTML from the component view.
                     $replacement = view('components.' . $componentName, $componentData)->render();
                 } else {
                     Log::warning("Component view not found: 'components.{$componentName}'. Tag '{$fullTag}' was removed.");
@@ -83,28 +109,17 @@ class PageController extends Controller
                 $search[] = $fullTag;
                 $replace[] = $replacement;
             }
-            
-            // Perform the replacement on the raw markdown string.
             $markdownContent = str_replace($search, $replace, $markdownContent);
+            return $markdownContent;
         }
-
-        // Second, convert the modified markdown (which now contains HTML snippets) to final HTML.
-        // The converter will correctly leave the existing HTML from components untouched.
-        $environment = new Environment();
-        $environment->addExtension(new CommonMarkCoreExtension());
-        $converter = new MarkdownConverter($environment);
-        $htmlContent = $converter->convert($markdownContent);
-
-        return $htmlContent;
     }
 
     /**
-     * Parses a string of HTML-like attributes into an associative array.
+     * Parses a string of HTML-like attributes into an associative array
      */
     private function parseAttributes(string $str): array
     {
         $attributes = [];
-        // This pattern now correctly handles attributes within the { ... } syntax
         $pattern = '/([a-zA-Z0-9_-]+)\s*=\s*(?:"([^"]*)"|\'([^\']*)\'|([^\s}]+))/';
         preg_match_all($pattern, $str, $matches, PREG_SET_ORDER);
 
