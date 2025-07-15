@@ -6,4 +6,4 @@ Dit is de content voor de homepagina, direct geladen uit een **Markdown** bestan
 -   Makkelijk te bewerken
 -   Geen Blade syntax of html nodig
 
-{cta}
+{cta title=test}
