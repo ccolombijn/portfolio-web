@@ -1,5 +1,6 @@
+// tailwind.config.cjs
 /** @type {import('tailwindcss').Config} */
-export default {
+module.exports = {
     content: [
       './resources/**/*.blade.php',
       './resources/**/*.js',
@@ -7,10 +8,15 @@ export default {
     ],
     theme: {
       extend: {
-        // @theme rule in .scss has prevalence
-        fontFamily: {
-          sans: ['Instrument Sans', 'ui-sans-serif', 'system-ui'],
+        keyframes: {
+          'pan-clouds': {
+            '0%': { transform: 'translateX(0)' },
+            '100%': { transform: 'translateX(-50%)' },
+          }
         },
+        animation: {
+          'pan-clouds': 'pan-clouds 180s linear infinite',
+        }
       },
     },
     plugins: [],

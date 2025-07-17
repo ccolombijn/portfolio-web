@@ -1,6 +1,15 @@
 .btn {
-    @apply text-center min-w-[250px] rounded-sm;
+    @apply inline-flex p-4 mt-4 text-center min-w-[250px] rounded-xl justify-center;
     &--primary {
         @apply bg-gray-500 text-white;
+    }
+    &--white {
+        @apply bg-white text-slate-900;
+    }
+    &--outline {
+        @apply border-1 border-solid border-gray-500;
+        &-white {
+            @apply border-1 border-solid border-white;
+        }
     }
 }

@@ -1,0 +1,1 @@
+<a href="{{$link}}" class="btn btn--{{isset($type) ? $type : 'primary' }}">{{$text}}</a>

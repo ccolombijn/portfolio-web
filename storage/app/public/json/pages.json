@@ -7,13 +7,11 @@
     },
     {
         "name" : "about",
-        "title" : "Over mij",
-        "route" : "/about"
+        "title" : "Over mij"
     },
     {
         "name" : "skills",
-        "title" : "Vaardigheden",
-        "route" : "/skills"
+        "title" : "Vaardigheden"
     },
     {
         "name": "portfolio.index",

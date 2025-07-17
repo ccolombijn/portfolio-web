@@ -10,7 +10,9 @@ foreach (app('pages.data') as $page) {
         ? 'App\\Http\\Controllers\\' . $page['controller']
         : [PageController::class, 'show'];
     // Define route
-    Route::get($page['route'], $controllerAction)
+    Route::get(isset($page['route']) 
+        ? $page['route'] 
+        : '/' . $page['name'], $controllerAction)
          ->defaults('page', $page)
          ->name($page['name']);
 }

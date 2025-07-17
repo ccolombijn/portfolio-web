@@ -1,5 +1,106 @@
 .header {
+    @apply bg-slate-900 text-white h-screen;
     &__content {
-        @apply text-center;
+        @apply text-center pt-[15rem] align-middle;
+    }
+    &__container {
+        @apply relative z-50;
+    }
+}
+
+/*
+  Registering the custom properties tells the browser HOW to animate them.
+  This is the magic that enables smooth transitions for gradients.
+*/
+@property --x1 {
+    syntax: '<percentage>';
+    inherits: false;
+    initial-value: 20%;
+  }
+  @property --y1 {
+    syntax: '<percentage>';
+    inherits: false;
+    initial-value: 40%;
+  }
+  @property --color1 {
+    syntax: '<color>';
+    inherits: false;
+    initial-value: rgba(31, 153, 163, 0.3);
+  }
+  
+  @property --x2 {
+    syntax: '<percentage>';
+    inherits: false;
+    initial-value: 80%;
+  }
+  @property --y2 {
+    syntax: '<percentage>';
+    inherits: false;
+    initial-value: 50%;
+  }
+  @property --color2 {
+    syntax: '<color>';
+    inherits: false;
+    initial-value: rgba(193, 70, 111, 0.3);
+  }
+  
+  .animated-gradient-bg {
+    /* Positioning and size */
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+  
+    /* Base background */
+    background-color: #0f172a; /* Corresponds to bg-slate-900 */
+    
+    /* The magic: using CSS variables in the gradient */
+    background-image: radial-gradient(ellipse 80% 80% at var(--x1) var(--y1), var(--color1), transparent),
+                      radial-gradient(ellipse 80% 80% at var(--x2) var(--y2), var(--color2), transparent);
+    
+    /* Link the animation */
+    animation: moveAndChangeColor 20s ease-in-out infinite;
+  }
+  
+  /* The animation definition */
+  @keyframes moveAndChangeColor {
+    0%, 100% {
+      --x1: 20%;
+      --y1: 40%;
+      --color1: rgba(38, 203, 218, 0.493); /* Teal */
+  
+      --x2: 80%;
+      --y2: 50%;
+      --color2: rgba(212, 55, 108, 0.61); /* Pink */
+    }
+    50% {
+      --x1: 30%;
+      --y1: 60%;
+      --color1: rgba(82, 59, 214, 0.623); /* Purple */
+  
+      --x2: 70%;
+      --y2: 30%;
+      --color2: rgba(221, 176, 53, 0.61); /* Orange */
+    }
+  }
+.animated-clouds {
+    position: absolute;
+    inset: 0;
+    width: 200%; 
+    height: 100%;
+    background-image: url('/images/CLOUDS.png');
+    background-size: auto 100%;
+    background-repeat: repeat-x; 
+    opacity: 0.4; 
+    animation: pan-clouds 180s linear infinite;
+}
+  
+
+@keyframes pan-clouds {
+    0% {
+        transform: translateX(0);
+    }
+    100% {
+        transform: translateX(-50%); 
     }
 }
