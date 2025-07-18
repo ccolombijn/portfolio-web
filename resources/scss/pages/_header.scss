@@ -1,98 +1,109 @@
 .header {
-    @apply bg-slate-900 text-white h-screen;
+    @apply bg-slate-900 text-white h-screen pt-8;
     &__content {
-        @apply text-center pt-[15rem] align-middle;
+        @apply text-center py-20 align-middle;
+        h2 ,p {
+            @apply p-4;
+        }
     }
     &__container {
-        @apply relative z-50;
+        @apply relative z-50 backdrop-blur-xs;
+        mask: linear-gradient(black, black, transparent);
+    }
+    &__title {
+        
+        @apply inline-block float-left;
+        
+        span {
+            @apply hidden;
+        }
+        a {
+            @apply inline-block bg-[url(/images/ccc_logo_wit.png)] bg-contain bg-center h-[80px] w-[100px] bg-no-repeat;
+        }
+    }
+    nav {
+        @apply p-8 pl-36;
+        a {
+            @apply text-xl font-thin inline-block relative;
+            &::after {
+                @apply absolute w-full h-1 bottom-0 left-0 bg-[#ffffff70];
+                content: '';
+                transform: scaleX(0);
+                transition: transform 0.25s ease-out;
+                transform-origin: bottom center;
+            }
+            &:hover::after {
+                transform: scaleX(1);
+                transform-origin: bottom center;
+              }
+            &.active {
+                @apply font-bold;
+            }
+        }
+        
     }
 }
 
-/*
-  Registering the custom properties tells the browser HOW to animate them.
-  This is the magic that enables smooth transitions for gradients.
-*/
-@property --x1 {
-    syntax: '<percentage>';
-    inherits: false;
-    initial-value: 20%;
+// 1. Genereer vier willekeurige kleuren voor de animatie
+// We gebruiken hsl(hue, saturation, lightness) voor mooie, levendige kleuren.
+// random(360) kiest een willekeurige tint op de kleurencirkel.
+$start-color-1: hsl(random(360), 70%, 60%);
+$start-color-2: hsl(random(360), 70%, 60%);
+$end-color-1: hsl(random(360), 70%, 60%);
+$end-color-2: hsl(random(360), 70%, 60%);
+
+// 2. Registreer de CSS custom properties voor een vloeiende animatie in de browser.
+// Deze stap is ongewijzigd maar nog steeds essentieel.
+@property --color1 {
+  syntax: '<color>';
+  inherits: false;
+  initial-value: #{$start-color-1}; // Gebruik de SCSS variabele als startwaarde
+}
+@property --color2 {
+  syntax: '<color>';
+  inherits: false;
+  initial-value: #{$start-color-2}; // Gebruik de SCSS variabele als startwaarde
+}
+// Voeg hier eventueel @property regels toe voor posities als je die ook animeert.
+
+// 3. Definieer de keyframes met de willekeurige SCSS-kleurvariabelen.
+// De #{...} syntax is nodig om de SCSS-variabele correct in de CSS-code te plaatsen.
+@keyframes moveAndChangeColor {
+  0%, 100% {
+    --color1: #{$start-color-1};
+    --color2: #{$start-color-2};
   }
-  @property --y1 {
-    syntax: '<percentage>';
-    inherits: false;
-    initial-value: 40%;
+  50% {
+    --color1: #{$end-color-1};
+    --color2: #{$end-color-2};
   }
-  @property --color1 {
-    syntax: '<color>';
-    inherits: false;
-    initial-value: rgba(31, 153, 163, 0.3);
-  }
+}
+
+// 4. Pas de animatie toe op je achtergrond-element.
+.animated-gradient-bg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  background-color: #0f172a; // Donkere basiskleur
   
-  @property --x2 {
-    syntax: '<percentage>';
-    inherits: false;
-    initial-value: 80%;
-  }
-  @property --y2 {
-    syntax: '<percentage>';
-    inherits: false;
-    initial-value: 50%;
-  }
-  @property --color2 {
-    syntax: '<color>';
-    inherits: false;
-    initial-value: rgba(193, 70, 111, 0.3);
-  }
+  // De radial gradients gebruiken nu de CSS custom properties.
+  background-image: radial-gradient(ellipse 80% 80% at 20% 40%, var(--color1), transparent),
+                    radial-gradient(ellipse 80% 80% at 80% 50%, var(--color2), transparent);
   
-  .animated-gradient-bg {
-    /* Positioning and size */
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-  
-    /* Base background */
-    background-color: #0f172a; /* Corresponds to bg-slate-900 */
-    
-    /* The magic: using CSS variables in the gradient */
-    background-image: radial-gradient(ellipse 80% 80% at var(--x1) var(--y1), var(--color1), transparent),
-                      radial-gradient(ellipse 80% 80% at var(--x2) var(--y2), var(--color2), transparent);
-    
-    /* Link the animation */
-    animation: moveAndChangeColor 20s ease-in-out infinite;
-  }
-  
-  /* The animation definition */
-  @keyframes moveAndChangeColor {
-    0%, 100% {
-      --x1: 20%;
-      --y1: 40%;
-      --color1: rgba(38, 203, 218, 0.493); /* Teal */
-  
-      --x2: 80%;
-      --y2: 50%;
-      --color2: rgba(212, 55, 108, 0.61); /* Pink */
-    }
-    50% {
-      --x1: 30%;
-      --y1: 60%;
-      --color1: rgba(82, 59, 214, 0.623); /* Purple */
-  
-      --x2: 70%;
-      --y2: 30%;
-      --color2: rgba(221, 176, 53, 0.61); /* Orange */
-    }
-  }
+  // Koppel de animatie
+  // animation: moveAndChangeColor 20s ease-in-out infinite;
+}
 .animated-clouds {
     position: absolute;
     inset: 0;
     width: 200%; 
     height: 100%;
     background-image: url('/images/CLOUDS.png');
-    background-size: auto 100%;
+    background-size: auto 250%;
     background-repeat: repeat-x; 
-    opacity: 0.4; 
-    animation: pan-clouds 180s linear infinite;
+    opacity: 0.2; 
+    animation: pan-clouds 320s linear infinite;
 }
   
 

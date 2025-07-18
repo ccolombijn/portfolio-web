@@ -7,6 +7,9 @@ module.exports = {
       './vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php',
     ],
     theme: {
+        colors : {
+            white_transp : '#ffffff70'
+        },
       extend: {
         keyframes: {
           'pan-clouds': {

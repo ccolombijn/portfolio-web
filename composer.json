@@ -9,7 +9,8 @@
         "php": "^8.2",
         "laravel/framework": "^12.0",
         "laravel/tinker": "^2.10.1",
-        "league/commonmark": "^2.7"
+        "league/commonmark": "^2.7",
+        "pug-php/pug": "^3.5"
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",
@@ -68,7 +69,8 @@
         "sort-packages": true,
         "allow-plugins": {
             "pestphp/pest-plugin": true,
-            "php-http/discovery": true
+            "php-http/discovery": true,
+            "nodejs-php-fallback/nodejs-php-fallback": true
         }
     },
     "minimum-stability": "stable",

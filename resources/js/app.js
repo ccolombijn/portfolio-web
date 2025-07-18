@@ -1,17 +1,16 @@
-import './bootstrap';
 document.addEventListener('DOMContentLoaded', () => {
-
     // =================================================================
     //  SIMPLEX NOISE IMPLEMENTATION
     // =================================================================
     const simplex = (function() {
+        // ... (De volledige, lange Simplex Noise code van de vorige berichten)
         const F2 = 0.5 * (Math.sqrt(3.0) - 1.0), G2 = (3.0 - Math.sqrt(3.0)) / 6.0;
         const F3 = 1.0 / 3.0, G3 = 1.0 / 6.0;
         const p = new Uint8Array([151,160,137,91,90,15,131,13,201,95,96,53,194,233,7,225,140,36,103,30,69,142,8,99,37,240,21,10,23,190, 6,148,247,120,234,75,0,26,197,62,94,252,219,203,117,35,11,32,57,177,33,88,237,149,56,87,174,20,125,136,171,168, 68,175,74,165,71,134,139,48,27,166,77,146,158,231,83,111,229,122,60,211,133,230,220,105,92,41,55,46,245,40,244,102,143,54, 65,25,63,161, 1,216,80,73,209,76,132,187,208, 89,18,169,200,196,135,130,116,188,159,86,164,100,109,198,173,186, 3,64,52,217,226,250,124,123,5,202,38,147,118,126,255,82,85,212,207,206,59,227,47,16,58,17,182,189,28,42,223,183,170,213,119,248,152, 2,44,154,163, 70,221,153,101,155,167, 43,172,9,129,22,39,253, 19,98,108,110,79,113,224,232,178,185, 112,104,218,246,97,228,251,34,242,193,238,210,144,12,191,179,162,241, 81,51,145,235,249,14,239,107,49,192,214, 31,181,199,106,157,184, 84,204,176,115,121,50,45,127, 4,150,254,138,236,205,93,222,114,67,29,24,72,243,141,128,195,78,66,215,61,156,180]);
         const perm = new Uint8Array(512), grad3 = new Float32Array([1,1,0,-1,1,0,1,-1,0,-1,-1,0,1,0,1,-1,0,1,1,0,-1,-1,0,-1,0,1,1,0,-1,1,0,1,-1,0,-1,-1]);
         for(let i=0; i<512; i++) perm[i] = p[i & 255];
         function noise3D(x, y, z) {
-            let n0, n1, n2, n3; 
+            let n0, n1, n2, n3;
             const s = (x + y + z) * F3;
             const i = Math.floor(x + s), j = Math.floor(y + s), k = Math.floor(z + s);
             const t = (i + j + k) * G3;
@@ -47,24 +46,38 @@ document.addEventListener('DOMContentLoaded', () => {
         return { noise3D: noise3D };
     })();
     // =================================================================
-    //  EINDE NOISE IMPLEMENTATION
-    // =================================================================
-
-    const canvas = document.getElementById('dot-wave-canvas');
-    if (!canvas) return;
     
+    const canvas = document.getElementById('dot-wave-canvas');
+    const gradientBg = document.querySelector('.animated-gradient-bg');
+    if (!canvas || !gradientBg) return;
+
     const ctx = canvas.getContext('2d');
     let time = 0;
 
-    // --- AANGEPASTE INSTELLINGEN ---
-    const NOISE_AMPLITUDE = 150;     // VERHOOGD: Voor hogere, meer zichtbare golven
-    const NOISE_ZOOM = 0.022;      // Iets aangepast voor een goede golf-grootte
-    const NOISE_SPEED = 0.005;      
+    // --- Instellingen voor de puntjesanimatie ---
+    const DOT_SPACING = 30; 
+    const NOISE_AMPLITUDE = 120;
+    const NOISE_ZOOM = 0.025;
+    const NOISE_SPEED = 0.006;
+    const DOT_SIZE = 2.5;
+    const PERSPECTIVE = 300;
 
-    const DOT_SPACING = 28;        // VERLAAGD: Voor meer puntjes (dichter op elkaar)
-    const DOT_SIZE_MULTIPLIER = 3.5; // NIEUW: Om de puntjes groter te maken
-    const PERSPECTIVE = 280;
-    // -------------------
+    // --- Instellingen voor kleuranimatie ---
+    const COLOR_TRANSITION_SPEED = 0.005;
+    let colorState = {
+        c1: { r: 78, g: 215, b: 143 },
+        c2: { r: 193, g: 70, b: 111 },
+        t1: generateRandomColor(),
+        t2: generateRandomColor()
+    };
+
+    function generateRandomColor() {
+        return { r: Math.floor(Math.random() * 256), g: Math.floor(Math.random() * 256), b: Math.floor(Math.random() * 256) };
+    }
+
+    function lerp(start, end, amount) {
+        return start + (end - start) * amount;
+    }
 
     let projection_center_x, projection_center_y;
 
@@ -72,46 +85,46 @@ document.addEventListener('DOMContentLoaded', () => {
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
         projection_center_x = canvas.width / 2;
-        projection_center_y = canvas.height * 0.65;
+        projection_center_y = canvas.height * 0.6;
     }
 
-    function draw() {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
+    function animate() {
+        // --- Kleuranimatie ---
+        colorState.c1.r = lerp(colorState.c1.r, colorState.t1.r, COLOR_TRANSITION_SPEED);
+        colorState.c1.g = lerp(colorState.c1.g, colorState.t1.g, COLOR_TRANSITION_SPEED);
+        colorState.c1.b = lerp(colorState.c1.b, colorState.t1.b, COLOR_TRANSITION_SPEED);
+        colorState.c2.r = lerp(colorState.c2.r, colorState.t2.r, COLOR_TRANSITION_SPEED);
+        colorState.c2.g = lerp(colorState.c2.g, colorState.t2.g, COLOR_TRANSITION_SPEED);
+        colorState.c2.b = lerp(colorState.c2.b, colorState.t2.b, COLOR_TRANSITION_SPEED);
+        gradientBg.style.setProperty('--color1', `rgb(${colorState.c1.r}, ${colorState.c1.g}, ${colorState.c1.b})`);
+        gradientBg.style.setProperty('--color2', `rgb(${colorState.c2.r}, ${colorState.c2.g}, ${colorState.c2.b})`);
+        if (Math.abs(colorState.c1.r - colorState.t1.r) < 1) { colorState.t1 = generateRandomColor(); }
+        if (Math.abs(colorState.c2.r - colorState.t2.r) < 1) { colorState.t2 = generateRandomColor(); }
 
+        // --- Puntjesanimatie ---
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
         for (let iy = 0; iy < canvas.height + DOT_SPACING; iy += DOT_SPACING) {
             for (let ix = 0; ix < canvas.width + DOT_SPACING; ix += DOT_SPACING) {
-                
                 const perspective_factor = PERSPECTIVE / (PERSPECTIVE + (canvas.height - iy));
                 const projected_x = (ix - projection_center_x) * perspective_factor + projection_center_x;
                 const projected_y = (iy - projection_center_y) * perspective_factor + projection_center_y;
-
                 const noise_val = simplex.noise3D(ix * NOISE_ZOOM, iy * NOISE_ZOOM, time);
-                
                 const final_y = projected_y + (noise_val * NOISE_AMPLITUDE) * perspective_factor;
-                
                 const scale_factor = (noise_val + 1) / 2;
-                
-                // AANGEPAST: De grootte wordt nu extra vermenigvuldigd
-                const size = DOT_SIZE_MULTIPLIER * perspective_factor * scale_factor;
-                const opacity = 0.8 * perspective_factor * scale_factor;
-
-                if (size < 0.2) continue;
-
+                const size = DOT_SIZE * perspective_factor * scale_factor;
+                const opacity = 0.9 * perspective_factor * scale_factor;
+                if (size < 0.3) continue;
                 ctx.beginPath();
                 ctx.arc(projected_x, final_y, size, 0, Math.PI * 2);
                 ctx.fillStyle = `rgba(255, 255, 255, ${opacity})`;
                 ctx.fill();
             }
         }
-    }
-
-    function animate() {
-        draw();
+        
         time += NOISE_SPEED;
         requestAnimationFrame(animate);
     }
 
-    window.addEventListener('resize', resizeCanvas);
     resizeCanvas();
     animate();
 });

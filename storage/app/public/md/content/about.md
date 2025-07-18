@@ -1,3 +1,5 @@
+![Christoffel](/images/cc_finished.png)
+
 ## Over Mij
 
 Ik ben een ontwerper en ontwikkelaar met meer dan 25 jaar ervaring. Mijn passie ligt bij ontwerpen, maar heb ook een grote interesse in (web/software) development, met een voorkeur voor de frontend en in mindere mate de backend. Ik haal energie uit het vertalen van een merkverhaal naar een helder, doordacht ontwerp of een interactieve oplossing.

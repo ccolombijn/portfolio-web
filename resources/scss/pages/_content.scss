@@ -1,6 +1,7 @@
 .content {
+    @apply bg-[url(/images/dots01.png)] bg-contain;
     &__container {
-        @apply container;
+        @apply container p-16;
     }
     
 }

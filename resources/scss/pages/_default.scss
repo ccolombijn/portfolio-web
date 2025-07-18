@@ -1,17 +1,26 @@
 body {
+    @apply text-[#6A6766];
     overflow-x: hidden;
 }
 
 h1 {
-    @apply text-3xl;
+    @apply text-4xl;
 }
 
 h2 {
-    @apply text-2xl;
+    @apply text-3xl;
 }
 
 h3 {
     @apply text-xl;
+}
+
+ul, p, :is(h1, h2, h3, h4, h5, h6) {
+    @apply p-4;
+}
+
+p > img {
+    @apply w-[15vw] float-left mr-8;
 }
 
 [class$="__container"] {

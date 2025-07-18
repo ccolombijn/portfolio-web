@@ -1,15 +1,15 @@
 .btn {
-    @apply inline-flex p-4 mt-4 text-center min-w-[250px] rounded-xl justify-center;
+    @apply inline-flex p-4 mt-4 text-center min-w-[250px] rounded-xl justify-center ml-4 backdrop-blur-xs;
     &--primary {
         @apply bg-gray-500 text-white;
     }
     &--white {
-        @apply bg-white text-slate-900;
+        @apply bg-[#ffffff70] text-slate-900 hover:bg-white;
     }
     &--outline {
         @apply border-1 border-solid border-gray-500;
         &-white {
-            @apply border-1 border-solid border-white;
+            @apply border-1 border-solid border-[#ffffff70] backdrop-blur-xs;
         }
     }
 }

@@ -2,7 +2,7 @@
     <ul class="nav">
     {{-- {{dd($navigationItems)}} --}}
     @foreach ($navigationItems as $item)
-        @if(!isset($item['exclude_nav']))
+        @if(!isset($item['exclude_nav']) &&  $item['title'] !== '')
         <li class="nav-item">
             <a href="{{ route($item['name']) }}"
                 class="nav-link{{ request()->routeIs($item['name']) ? ' active' : '' }}">

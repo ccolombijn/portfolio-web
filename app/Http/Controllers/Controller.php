@@ -1,11 +1,13 @@
 <?php
 
 namespace App\Http\Controllers;
+
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
 use League\CommonMark\Environment\Environment;
 use League\CommonMark\Extension\CommonMark\CommonMarkCoreExtension;
 use League\CommonMark\MarkdownConverter;
+use Pug\Pug;
 
 abstract class Controller
 {
@@ -16,8 +18,7 @@ abstract class Controller
 
     /**
      * The parts in each page
-     * 
-     * @var list<string>
+     * * @var list<string>
      */
     protected $parts = [
         'header',
@@ -36,49 +37,77 @@ abstract class Controller
 
     public function page(array $page) 
     {
-        //$this->data = ['page' => $page];
-        $this->show();
+        // Corrected this line to pass the required argument to the abstract show method.
+        $this->show($page);
     }
-    //
 
     /**
-     * Processes markdown to HTML
+     * Processes content to HTML, supporting Pug-to-Markdown and Markdown-to-HTML workflows.
      */
-    public function getMarkdownHTML(string $part, array $page): string
+    public function getPugMarkdownHTML(string $part, array $page): string
     {
         $pageName = $page['name'];
-        $possiblePaths = [
-            storage_path("app/public/md/{$part}/{$pageName}.md"),
-            storage_path("app/public/md/{$part}/default.md"),
-            resource_path("md/{$part}/{$pageName}.md"),
-            resource_path("md/{$part}/default.md"),
+        $rawContent = '';
+        $sourceFound = false;
+
+        // Prioritize .pug files
+        $possiblePugPaths = [
+            storage_path("app/public/pug/{$part}/{$pageName}.pug"),
+            storage_path("app/public/pug/{$part}/default.pug"),
+            resource_path("pug/{$part}/{$pageName}.pug"),
+            resource_path("pug/{$part}/default.pug"),
         ];
 
-        $filePath = '';
-
-        foreach ($possiblePaths as $path) {
+        foreach ($possiblePugPaths as $path) {
             if (File::exists($path)) {
-                $filePath = $path;
-                break; 
+                try {
+                    $pug = new Pug(['basedir' => resource_path()]);
+                    $rawContent = $pug->render($path, ['page' => $page, 'content' => $this->content]);
+                    $sourceFound = true;
+                    break;
+                } catch (\Exception $e) {
+                    Log::error("Pug rendering failed for '{$path}': " . $e->getMessage());
+                    return "[Pug Error]";
+                }
             }
         }
 
-        if (empty($filePath)) {
+        // If no .pug file was found, fall back to .md file logic.
+        if (!$sourceFound) {
+            $possibleMdPaths = [
+                storage_path("app/public/md/{$part}/{$pageName}.md"),
+                storage_path("app/public/md/{$part}/default.md"),
+                resource_path("md/{$part}/{$pageName}.md"),
+                resource_path("md/{$part}/default.md"),
+            ];
+
+            foreach ($possibleMdPaths as $path) {
+                if (File::exists($path)) {
+                    $rawContent = File::get($path);
+                    $sourceFound = true;
+                    break; 
+                }
+            }
+        }
+
+        
+        if (!$sourceFound) {
             return '';
         }
 
-        $markdownContent = File::get($filePath);
-        $markdownContent = $this->insertComponents($markdownContent);
+        // Insert {components}
+        $contentWithComponents = $this->insertComponents($rawContent);
+        
+        // Convert Markdown to HTML
         $environment = new Environment();
         $environment->addExtension(new CommonMarkCoreExtension());
         $converter = new MarkdownConverter($environment);
-        $htmlContent = $converter->convert($markdownContent);
-
-        return $htmlContent;
+        
+        return $converter->convert($contentWithComponents);
     }
 
     /**
-     * Inserts components 
+     * Inserts Blade {components}
      */
     private function insertComponents(string $markdownContent): string
     {
@@ -99,10 +128,12 @@ abstract class Controller
                 $componentData = array_merge($defaultData, $overrides);
 
                 $replacement = '';
-                if (view()->exists('components.' . $componentName)) {
-                    $replacement = view('components.' . $componentName, $componentData)->render();
+                $bladeComponentView = 'components.' . $componentName;
+
+                if (view()->exists($bladeComponentView)) {
+                    $replacement = view($bladeComponentView, $componentData)->render();
                 } else {
-                    Log::warning("Component view not found: 'components.{$componentName}'. Tag '{$fullTag}' was removed.");
+                    Log::warning("Blade component view not found: '{$bladeComponentView}'. Tag '{$fullTag}' was removed.");
                 }
                 
                 $search[] = $fullTag;
@@ -110,15 +141,13 @@ abstract class Controller
             }
 
             $markdownContent = str_replace($search, $replace, $markdownContent);
-
         }
         return $markdownContent;
     }
 
     /**
      * Parses a string of HTML-like attributes into an associative array
-     * 
-     * @return array<string, any>
+     * * @return array<string, mixed>
      */
     private function parseAttributes(string $str): array
     {
