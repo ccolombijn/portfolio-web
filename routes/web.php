@@ -5,16 +5,19 @@ use App\Http\Controllers\PortfolioController;
 use App\Http\Controllers\ContactController;
 
 foreach (app('pages.data') as $page) {
-    // Get page controller
+
     $controllerAction = isset($page['controller'])
-        ? 'App\\Http\\Controllers\\' . $page['controller']
+        ? 'App\\Http\\Controllers\\' . $page['controller'] . '@' . ($page['method'] ?? 'show')
         : [PageController::class, 'show'];
-    // Define route
-    Route::get(isset($page['route']) 
-        ? $page['route'] 
-        : '/' . $page['name'], $controllerAction)
-         ->defaults('page', $page)
-         ->name($page['name']);
+
+    $routeName = isset($page['method']) 
+        ? $page['name'] . '.' . $page['method']
+        : $page['name'];
+
+    $routePath = $page['route'] ?? '/' . $page['name'];
+    Route::get($routePath, $controllerAction)
+        ->defaults('page', $page)
+        ->name($routeName);
 }
 
 Route::get('/portfolio/{project:slug}', [PortfolioController::class, 'show'])->name('portfolio.show');

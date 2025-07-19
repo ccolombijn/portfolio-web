@@ -10,11 +10,19 @@ class PageController extends Controller
      */
     public function show(array $page)
     {
-        $this->data = ['page' => $page]; 
-        foreach ($this->parts as $part) { 
-            $this->data[$part] = $this->getPugMarkdownHTML($part, $page) ?? '';
-        }
-        return view('pages.default', $this->data);
+
+         $contentData = [];
+         foreach ($this->parts as $part) {
+             $contentData[$part] = $this->getPugMarkdownHTML($part, $page) ?? '';
+         }
+ 
+         $data = [
+             'page' => $page,
+             'parts' => $this->parts,
+             'content' => $contentData,
+         ];
+ 
+         return view('pages.default', $data);
     }
 
 }

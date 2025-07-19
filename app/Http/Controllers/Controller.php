@@ -8,7 +8,7 @@ use League\CommonMark\Environment\Environment;
 use League\CommonMark\Extension\CommonMark\CommonMarkCoreExtension;
 use League\CommonMark\MarkdownConverter;
 use Pug\Pug;
-use Pug\Filter\Markdown as MarkdownFilter; // Import the filter
+use Pug\Filter\Markdown as MarkdownFilter; 
 
 abstract class Controller
 {
@@ -38,7 +38,6 @@ abstract class Controller
 
     public function page(array $page) 
     {
-        // Corrected this line to pass the required argument to the abstract show method.
         $this->show($page);
     }
 
@@ -59,22 +58,17 @@ abstract class Controller
         foreach ($possiblePugPaths as $path) {
             if (File::exists($path)) {
                 try {
-                    // Create the Pug instance with base options.
                     $pug = new Pug([
                         'basedir' => resource_path(),
                         'pretty' => true,
-                        'cache' => false, // Force re-compilation of templates
+                        'cache' => false, 
                         'filters' => [
                             'markdown' => new MarkdownFilter(),
                         ],
                     ]);
                     
-                    // Explicitly add the markdown filter to the instance.
-                    // $pug->addFilter('markdown', new MarkdownFilter());
-                    // Pug renders the file. :markdown filter inside the .pug file converts markdown to HTML.
                     $output = $pug->render($path, ['page' => $page, 'content' => $this->content]);
-                    
-                    //return $this->insertComponents($htmlFromPug);
+
                 } catch (\Exception $e) {
                     Log::error("Pug rendering failed for '{$path}': " . $e->getMessage());
                     return "[Pug Error]";
@@ -84,7 +78,6 @@ abstract class Controller
 
         if(!$output){
 
-        
             $possibleMdPaths = [
                 storage_path("app/public/md/{$part}/{$pageName}.md"),
                 storage_path("app/public/md/{$part}/default.md"),
@@ -95,8 +88,6 @@ abstract class Controller
             $filePath = '';
             foreach ($possibleMdPaths as $path) {
                 if (File::exists($path)) {
-                    // In the original code, this was assigned File::get($path), which is a string.
-                    // It should be just the path string. I've corrected this.
                     $filePath = $path;
                     break; 
                 }

@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 use App\Http\Controllers\PageController;
 use App\Http\Controllers\PortfolioController;
+use App\Http\Controllers\ContactController;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -47,10 +48,25 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        View::share('navigationItems', $this->app->make('pages.data'));
-        $this->app->when([PageController::class,PortfolioController::class])
+        $pagesData = $this->app->make('pages.data');
+        $navigationItems = collect($pagesData)->map(function ($page) {
+            $page['routeName'] = isset($page['method'])
+                ? $page['name'] . '.' . $page['method']
+                : $page['name'];
+            
+            return $page;
+        })->all();
+
+        View::share('navigationItems', $navigationItems);
+        
+        $this->app->when([
+            PageController::class,
+            PortfolioController::class,
+            ContactController::class
+        ])
             ->needs('$content')
             ->give($this->app->make('content.data'));
+        
         $this->app->when(PortfolioController::class)
             ->needs('$projects')
             ->give($this->app->make('projects.data'));

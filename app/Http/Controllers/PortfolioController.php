@@ -2,9 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Project; // Make sure to import your Project model
-use Illuminate\Http\Request;
-
 class PortfolioController extends Controller
 {
 
@@ -12,54 +9,45 @@ class PortfolioController extends Controller
 
     public function __construct(array $projects, array $content)
     {
-        // Geef de $content array door aan de parent Controller.
         parent::__construct($content);
-
-        // Sla de $projects array op voor eigen gebruik.
         $this->projects = $projects;
     }
 
-    /**
-     * Show the main portfolio page or a single project detail page.
-     * This single method handles both routes.
-     */
     public function show(array $page)
     {
-        // Laravel's Route Model Binding provides the project model if the {project:slug}
-        // parameter exists in the URL. We can get it from the request's route.
+        // retrieve project 
         $projectRoute = request()->route('project');
         $projectName = $projectRoute->getName();
         $projectKey = array_search($projectName, 
             array_column($this->projects, 'name'));
         $project = $this->projects[$projectKey];
-        // If a project model was found, we are on the detail page.
-        // if ($project instanceof Project) {
-        if($project) { 
-            return view('pages.detail', [
-                'page' => $page, // The base portfolio page data
-                'item' => $project, // The specific project model
-            ]);
-        }
-
-        // Otherwise, we are on the main portfolio overview page.
-        // Fetch all projects to display in the list.
-        // $projects = Project::all(); // You might want to add ordering or pagination here.
-
-        return view('pages.overview', [
+        // construct data
+        $this->data = [
             'page' => $page,
-            'items' => $this->projects,
-        ]);
+            'item' => $project,
+        ];
+        // add parts
+        foreach ($this->parts as $part) { 
+            $this->data[$part] = $this->getPugMarkdownHTML($part, $page) ?? '';
+        }
+        // return view, overview as fallback if project not found
+        if($project) { 
+            return view('pages.detail', $this->data);
+        } else {
+            $this->data['items'] = $this->projects;
+            return view('pages.overview', $this->data);
+        }
     }
 
     public function index(array $page)
     {
-
-        // $projects = Project::latest()->get();
-        // $projects = [ /* temp dummy data */ ];
-
-        return view('pages.overview', [
+        $this->data = [
             'page' => $page,
             'items' => $this->projects,
-        ]);
+        ];
+        foreach ($this->parts as $part) { 
+            $this->data[$part] = $this->getPugMarkdownHTML($part, $page) ?? '';
+        }
+        return view('pages.overview', $this->data);
     }
 }

@@ -14,15 +14,17 @@
         "title" : "Vaardigheden"
     },
     {
-        "name": "portfolio.index",
-        "title": "Portfolio",
-        "route": "/portfolio",
-        "controller": "PortfolioController@index"
+        "name" : "portfolio",
+        "title" : "Portfolio",
+        "route" : "/portfolio",
+        "controller" : "PortfolioController",
+        "method" : "index"
     },
     {
-        "name": "contact.show",
-        "title": "Contact",
-        "route": "/contact",
-        "controller": "ContactController@show"
+        "name" : "contact",
+        "title" : "Contact",
+        "route" : "/contact",
+        "controller" : "ContactController",
+        "method" : "show"
     }
 ]

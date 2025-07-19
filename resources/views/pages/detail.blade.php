@@ -28,9 +28,5 @@
     </div>
 @endsection
 @section('footer')
-    <section class="footer">
-        <div class="footer__container">
-            {!! $footer !!}
-        </div>
-    </section>
+    @include('layouts.footer' ,['footer' => $footer])
 @endsection
