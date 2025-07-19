@@ -1,9 +1,12 @@
 .header {
     @apply bg-slate-900 text-white h-screen pt-8;
     &__content {
-        @apply text-center py-20 align-middle;
+        @apply text-center py-[15vh] align-middle;
         h2 ,p {
             @apply p-4;
+        }
+        .btn {
+            @apply text-[22px];
         }
     }
     &__container {

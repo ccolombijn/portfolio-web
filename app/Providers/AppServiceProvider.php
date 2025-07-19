@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 use App\Http\Controllers\PageController;
+use App\Http\Controllers\PortfolioController;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -18,7 +19,8 @@ class AppServiceProvider extends ServiceProvider
         $sources = [
             'pages',
             'content',
-            'contact'
+            'contact',
+            'projects'
         ];
         foreach($sources as $source) {
             $this->singleton($source);
@@ -46,8 +48,11 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         View::share('navigationItems', $this->app->make('pages.data'));
-        $this->app->when(PageController ::class)
+        $this->app->when([PageController::class,PortfolioController::class])
             ->needs('$content')
             ->give($this->app->make('content.data'));
+        $this->app->when(PortfolioController::class)
+            ->needs('$projects')
+            ->give($this->app->make('projects.data'));
     }
 }

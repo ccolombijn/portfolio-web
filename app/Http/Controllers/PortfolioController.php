@@ -8,10 +8,17 @@ use Illuminate\Http\Request;
 class PortfolioController extends Controller
 {
 
-    public function __construct()
+    protected $projects;
+
+    public function __construct(array $projects, array $content)
     {
-        // This constructor is intentionally empty.
+        // Geef de $content array door aan de parent Controller.
+        parent::__construct($content);
+
+        // Sla de $projects array op voor eigen gebruik.
+        $this->projects = $projects;
     }
+
     /**
      * Show the main portfolio page or a single project detail page.
      * This single method handles both routes.
@@ -20,10 +27,14 @@ class PortfolioController extends Controller
     {
         // Laravel's Route Model Binding provides the project model if the {project:slug}
         // parameter exists in the URL. We can get it from the request's route.
-        $project = request()->route('project');
-
+        $projectRoute = request()->route('project');
+        $projectName = $projectRoute->getName();
+        $projectKey = array_search($projectName, 
+            array_column($this->projects, 'name'));
+        $project = $this->projects[$projectKey];
         // If a project model was found, we are on the detail page.
-        if ($project instanceof Project) {
+        // if ($project instanceof Project) {
+        if($project) { 
             return view('pages.detail', [
                 'page' => $page, // The base portfolio page data
                 'item' => $project, // The specific project model
@@ -32,11 +43,11 @@ class PortfolioController extends Controller
 
         // Otherwise, we are on the main portfolio overview page.
         // Fetch all projects to display in the list.
-        $projects = Project::all(); // You might want to add ordering or pagination here.
+        // $projects = Project::all(); // You might want to add ordering or pagination here.
 
-        return view('pages.portfolio', [
+        return view('pages.overview', [
             'page' => $page,
-            'projects' => $projects,
+            'items' => $this->projects,
         ]);
     }
 
@@ -44,11 +55,11 @@ class PortfolioController extends Controller
     {
 
         // $projects = Project::latest()->get();
-        $projects = [ /* temp dummy data */ ];
+        // $projects = [ /* temp dummy data */ ];
 
         return view('pages.overview', [
             'page' => $page,
-            'items' => $projects,
+            'items' => $this->projects,
         ]);
     }
 }

@@ -8,6 +8,7 @@ use League\CommonMark\Environment\Environment;
 use League\CommonMark\Extension\CommonMark\CommonMarkCoreExtension;
 use League\CommonMark\MarkdownConverter;
 use Pug\Pug;
+use Pug\Filter\Markdown as MarkdownFilter; // Import the filter
 
 abstract class Controller
 {
@@ -42,15 +43,12 @@ abstract class Controller
     }
 
     /**
-     * Processes content to HTML, supporting Pug-to-Markdown and Markdown-to-HTML workflows.
+     * Processes content to HTML, supporting Pug-to-HTML and Markdown-to-HTML workflows.
      */
     public function getPugMarkdownHTML(string $part, array $page): string
     {
         $pageName = $page['name'];
-        $rawContent = '';
-        $sourceFound = false;
-
-        // Prioritize .pug files
+        $output = null;
         $possiblePugPaths = [
             storage_path("app/public/pug/{$part}/{$pageName}.pug"),
             storage_path("app/public/pug/{$part}/default.pug"),
@@ -61,10 +59,22 @@ abstract class Controller
         foreach ($possiblePugPaths as $path) {
             if (File::exists($path)) {
                 try {
-                    $pug = new Pug(['basedir' => resource_path()]);
-                    $rawContent = $pug->render($path, ['page' => $page, 'content' => $this->content]);
-                    $sourceFound = true;
-                    break;
+                    // Create the Pug instance with base options.
+                    $pug = new Pug([
+                        'basedir' => resource_path(),
+                        'pretty' => true,
+                        'cache' => false, // Force re-compilation of templates
+                        'filters' => [
+                            'markdown' => new MarkdownFilter(),
+                        ],
+                    ]);
+                    
+                    // Explicitly add the markdown filter to the instance.
+                    // $pug->addFilter('markdown', new MarkdownFilter());
+                    // Pug renders the file. :markdown filter inside the .pug file converts markdown to HTML.
+                    $output = $pug->render($path, ['page' => $page, 'content' => $this->content]);
+                    
+                    //return $this->insertComponents($htmlFromPug);
                 } catch (\Exception $e) {
                     Log::error("Pug rendering failed for '{$path}': " . $e->getMessage());
                     return "[Pug Error]";
@@ -72,8 +82,9 @@ abstract class Controller
             }
         }
 
-        // If no .pug file was found, fall back to .md file logic.
-        if (!$sourceFound) {
+        if(!$output){
+
+        
             $possibleMdPaths = [
                 storage_path("app/public/md/{$part}/{$pageName}.md"),
                 storage_path("app/public/md/{$part}/default.md"),
@@ -81,25 +92,28 @@ abstract class Controller
                 resource_path("md/{$part}/default.md"),
             ];
 
+            $filePath = '';
             foreach ($possibleMdPaths as $path) {
                 if (File::exists($path)) {
-                    $rawContent = File::get($path);
-                    $sourceFound = true;
+                    // In the original code, this was assigned File::get($path), which is a string.
+                    // It should be just the path string. I've corrected this.
+                    $filePath = $path;
                     break; 
                 }
             }
-        }
 
-        
-        if (!$sourceFound) {
-            return '';
-        }
+            if (empty($filePath)) {
+                return '';
+            }
+            $output = File::get($filePath);
+        }       
 
-        // Insert {components}
-        $contentWithComponents = $this->insertComponents($rawContent);
-        
-        // Convert Markdown to HTML
-        $environment = new Environment();
+        $contentWithComponents = $this->insertComponents($output);
+
+        $environment = new Environment([
+            'html_input' => 'allow',
+            'allow_unsafe_links' => false,
+        ]);
         $environment->addExtension(new CommonMarkCoreExtension());
         $converter = new MarkdownConverter($environment);
         
@@ -107,12 +121,12 @@ abstract class Controller
     }
 
     /**
-     * Inserts Blade {components}
+     * Inserts Blade components into a string.
      */
-    private function insertComponents(string $markdownContent): string
+    private function insertComponents(string $htmlContent): string
     {
         $pattern = '/{([a-zA-Z0-9_-]+)\s*([^}]*)?}/';
-        preg_match_all($pattern, $markdownContent, $matches, PREG_SET_ORDER);
+        preg_match_all($pattern, $htmlContent, $matches, PREG_SET_ORDER);
 
         if (!empty($matches)) {
             $search = [];
@@ -140,9 +154,9 @@ abstract class Controller
                 $replace[] = $replacement;
             }
 
-            $markdownContent = str_replace($search, $replace, $markdownContent);
+            $htmlContent = str_replace($search, $replace, $htmlContent);
         }
-        return $markdownContent;
+        return $htmlContent;
     }
 
     /**

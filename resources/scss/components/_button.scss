@@ -1,15 +1,15 @@
 .btn {
-    @apply inline-flex p-4 mt-4 text-center min-w-[250px] rounded-xl justify-center ml-4 backdrop-blur-xs;
+    @apply inline-flex p-4 mt-4 text-center min-w-[250px] rounded-xl justify-center ml-4 backdrop-blur-xs hover:bg-[#ffffff70] hover:text-slate-900 hover:border-none;
     &--primary {
         @apply bg-gray-500 text-white;
     }
     &--white {
-        @apply bg-[#ffffff70] text-slate-900 hover:bg-white;
+        @apply bg-white text-slate-900;
     }
     &--outline {
         @apply border-1 border-solid border-gray-500;
         &-white {
-            @apply border-1 border-solid border-[#ffffff70] backdrop-blur-xs;
+            @apply border-1 border-solid box-border border-[#ffffff70] backdrop-blur-xs;
         }
     }
 }
