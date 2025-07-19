@@ -1,71 +1,34 @@
+import { createNoise3D } from 'simplex-noise';
+
 document.addEventListener('DOMContentLoaded', () => {
-    // =================================================================
-    //  SIMPLEX NOISE IMPLEMENTATION
-    // =================================================================
-    const simplex = (function() {
-        // ... (De volledige, lange Simplex Noise code van de vorige berichten)
-        const F2 = 0.5 * (Math.sqrt(3.0) - 1.0), G2 = (3.0 - Math.sqrt(3.0)) / 6.0;
-        const F3 = 1.0 / 3.0, G3 = 1.0 / 6.0;
-        const p = new Uint8Array([151,160,137,91,90,15,131,13,201,95,96,53,194,233,7,225,140,36,103,30,69,142,8,99,37,240,21,10,23,190, 6,148,247,120,234,75,0,26,197,62,94,252,219,203,117,35,11,32,57,177,33,88,237,149,56,87,174,20,125,136,171,168, 68,175,74,165,71,134,139,48,27,166,77,146,158,231,83,111,229,122,60,211,133,230,220,105,92,41,55,46,245,40,244,102,143,54, 65,25,63,161, 1,216,80,73,209,76,132,187,208, 89,18,169,200,196,135,130,116,188,159,86,164,100,109,198,173,186, 3,64,52,217,226,250,124,123,5,202,38,147,118,126,255,82,85,212,207,206,59,227,47,16,58,17,182,189,28,42,223,183,170,213,119,248,152, 2,44,154,163, 70,221,153,101,155,167, 43,172,9,129,22,39,253, 19,98,108,110,79,113,224,232,178,185, 112,104,218,246,97,228,251,34,242,193,238,210,144,12,191,179,162,241, 81,51,145,235,249,14,239,107,49,192,214, 31,181,199,106,157,184, 84,204,176,115,121,50,45,127, 4,150,254,138,236,205,93,222,114,67,29,24,72,243,141,128,195,78,66,215,61,156,180]);
-        const perm = new Uint8Array(512), grad3 = new Float32Array([1,1,0,-1,1,0,1,-1,0,-1,-1,0,1,0,1,-1,0,1,1,0,-1,-1,0,-1,0,1,1,0,-1,1,0,1,-1,0,-1,-1]);
-        for(let i=0; i<512; i++) perm[i] = p[i & 255];
-        function noise3D(x, y, z) {
-            let n0, n1, n2, n3;
-            const s = (x + y + z) * F3;
-            const i = Math.floor(x + s), j = Math.floor(y + s), k = Math.floor(z + s);
-            const t = (i + j + k) * G3;
-            const x0 = x - (i - t), y0 = y - (j - t), z0 = z - (k - t);
-            let i1, j1, k1, i2, j2, k2;
-            if(x0 >= y0) {
-                if(y0 >= z0) { i1=1; j1=0; k1=0; i2=1; j2=1; k2=0; }
-                else if(x0 >= z0) { i1=1; j1=0; k1=0; i2=1; j2=0; k2=1; }
-                else { i1=0; j1=0; k1=1; i2=1; j2=0; k2=1; }
-            } else {
-                if(y0 < z0) { i1=0; j1=0; k1=1; i2=0; j2=1; k2=1; }
-                else if(x0 < z0) { i1=0; j1=1; k1=0; i2=0; j2=1; k2=1; }
-                else { i1=0; j1=1; k1=0; i2=1; j2=1; k2=0; }
-            }
-            const x1 = x0 - i1 + G3, y1 = y0 - j1 + G3, z1 = z0 - k1 + G3;
-            const x2 = x0 - i2 + 2.0 * G3, y2 = y0 - j2 + 2.0 * G3, z2 = z0 - k2 + 2.0 * G3;
-            const x3 = x0 - 1.0 + 3.0 * G3, y3 = y0 - 1.0 + 3.0 * G3, z3 = z0 - 1.0 + 3.0 * G3;
-            const ii = i & 255, jj = j & 255, kk = k & 255;
-            let t0 = 0.6 - x0*x0 - y0*y0 - z0*z0;
-            if(t0 < 0) n0 = 0.0;
-            else { const g = grad3[perm[ii+perm[jj+perm[kk]]] % 12 * 3]; t0 *= t0; n0 = t0 * t0 * (g * x0 + grad3[perm[ii+perm[jj+perm[kk]]] % 12 * 3 + 1] * y0 + grad3[perm[ii+perm[jj+perm[kk]]] % 12 * 3 + 2] * z0); }
-            let t1 = 0.6 - x1*x1 - y1*y1 - z1*z1;
-            if(t1 < 0) n1 = 0.0;
-            else { const g = grad3[perm[ii+i1+perm[jj+j1+perm[kk+k1]]] % 12 * 3]; t1 *= t1; n1 = t1 * t1 * (g * x1 + grad3[perm[ii+i1+perm[jj+j1+perm[kk+k1]]] % 12 * 3 + 1] * y1 + grad3[perm[ii+i1+perm[jj+j1+perm[kk+k1]]] % 12 * 3 + 2] * z1); }
-            let t2 = 0.6 - x2*x2 - y2*y2 - z2*z2;
-            if(t2 < 0) n2 = 0.0;
-            else { const g = grad3[perm[ii+i2+perm[jj+j2+perm[kk+k2]]] % 12 * 3]; t2 *= t2; n2 = t2 * t2 * (g * x2 + grad3[perm[ii+i2+perm[jj+j2+perm[kk+k2]]] % 12 * 3 + 1] * y2 + grad3[perm[ii+i2+perm[jj+j2+perm[kk+k2]]] % 12 * 3 + 2] * z2); }
-            let t3 = 0.6 - x3*x3 - y3*y3 - z3*z3;
-            if(t3 < 0) n3 = 0.0;
-            else { const g = grad3[perm[ii+1+perm[jj+1+perm[kk+1]]] % 12 * 3]; t3 *= t3; n3 = t3 * t3 * (g * x3 + grad3[perm[ii+1+perm[jj+1+perm[kk+1]]] % 12 * 3 + 1] * y3 + grad3[perm[ii+1+perm[jj+1+perm[kk+1]]] % 12 * 3 + 2] * z3); }
-            return 32.0 * (n0 + n1 + n2 + n3);
-        }
-        return { noise3D: noise3D };
-    })();
-    // =================================================================
-    
+
+    const noise3D = createNoise3D(Math.random);
     const canvas = document.getElementById('dot-wave-canvas');
     const gradientBg = document.querySelector('.animated-gradient-bg');
-    if (!canvas || !gradientBg) return;
+    if (!canvas || !gradientBg) {
+        console.error("Een van de benodigde elementen (.animated-gradient-bg of #dot-wave-canvas) is niet gevonden.");
+        return;
+    }
 
     const ctx = canvas.getContext('2d');
     let time = 0;
+    let particles = [];
+    const mouse = { x: null, y: null };
 
-    // --- Instellingen voor de puntjesanimatie ---
-    const DOT_SPACING = 30; 
-    const NOISE_AMPLITUDE = 120;
-    const NOISE_ZOOM = 0.025;
-    const NOISE_SPEED = 0.006;
-    const DOT_SIZE = 2.5;
-    const PERSPECTIVE = 300;
-
-    // --- Instellingen voor kleuranimatie ---
+    // --- CUSTOMIZATION ---
+    const PARTICLE_COUNT = 1500;
+    const PARTICLE_SPEED = 0.2;
+    const NOISE_SCALE = 1000;
+    const MAX_RADIUS = 1.2;
     const COLOR_TRANSITION_SPEED = 0.005;
+    const INTERACTION_RADIUS = 200;
+    const ATTRACTION_FORCE = 0.002;
+    const ORBITAL_FORCE = 0.05;
+    const LERP_SPEED = 0.05;
+    // -------------------
+
     let colorState = {
-        c1: { r: 78, g: 215, b: 143 },
+        c1: { r: 31, g: 153, b: 163 },
         c2: { r: 193, g: 70, b: 111 },
         t1: generateRandomColor(),
         t2: generateRandomColor()
@@ -79,17 +42,31 @@ document.addEventListener('DOMContentLoaded', () => {
         return start + (end - start) * amount;
     }
 
-    let projection_center_x, projection_center_y;
+    function setupParticles() {
+        particles = [];
+        for (let i = 0; i < PARTICLE_COUNT; i++) {
+            particles.push({
+                x: Math.random() * window.innerWidth,
+                y: Math.random() * window.innerHeight,
+                radius: Math.random() * MAX_RADIUS + 0.3,
+                opacity: Math.random() * 0.5 + 0.2,
+                color_choice: Math.random() > 0.5 ? 1 : 2,
+                noise_offset_x: Math.random() * NOISE_SCALE,
+                noise_offset_y: Math.random() * NOISE_SCALE,
+                vx: 0,
+                vy: 0
+            });
+        }
+    }
 
     function resizeCanvas() {
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
-        projection_center_x = canvas.width / 2;
-        projection_center_y = canvas.height * 0.6;
+        setupParticles();
     }
 
     function animate() {
-        // --- Kleuranimatie ---
+        // Kleuranimatie
         colorState.c1.r = lerp(colorState.c1.r, colorState.t1.r, COLOR_TRANSITION_SPEED);
         colorState.c1.g = lerp(colorState.c1.g, colorState.t1.g, COLOR_TRANSITION_SPEED);
         colorState.c1.b = lerp(colorState.c1.b, colorState.t1.b, COLOR_TRANSITION_SPEED);
@@ -101,30 +78,61 @@ document.addEventListener('DOMContentLoaded', () => {
         if (Math.abs(colorState.c1.r - colorState.t1.r) < 1) { colorState.t1 = generateRandomColor(); }
         if (Math.abs(colorState.c2.r - colorState.t2.r) < 1) { colorState.t2 = generateRandomColor(); }
 
-        // --- Puntjesanimatie ---
+        // Deeltjesanimatie
         ctx.clearRect(0, 0, canvas.width, canvas.height);
-        for (let iy = 0; iy < canvas.height + DOT_SPACING; iy += DOT_SPACING) {
-            for (let ix = 0; ix < canvas.width + DOT_SPACING; ix += DOT_SPACING) {
-                const perspective_factor = PERSPECTIVE / (PERSPECTIVE + (canvas.height - iy));
-                const projected_x = (ix - projection_center_x) * perspective_factor + projection_center_x;
-                const projected_y = (iy - projection_center_y) * perspective_factor + projection_center_y;
-                const noise_val = simplex.noise3D(ix * NOISE_ZOOM, iy * NOISE_ZOOM, time);
-                const final_y = projected_y + (noise_val * NOISE_AMPLITUDE) * perspective_factor;
-                const scale_factor = (noise_val + 1) / 2;
-                const size = DOT_SIZE * perspective_factor * scale_factor;
-                const opacity = 0.9 * perspective_factor * scale_factor;
-                if (size < 0.3) continue;
-                ctx.beginPath();
-                ctx.arc(projected_x, final_y, size, 0, Math.PI * 2);
-                ctx.fillStyle = `rgba(255, 255, 255, ${opacity})`;
-                ctx.fill();
+        particles.forEach(p => {
+            // AANGEPAST: De aanroep naar de noise-functie
+            const noise_val = noise3D(p.noise_offset_x, p.noise_offset_y, time);
+            const angle = noise_val * Math.PI * 2;
+            let target_vx = Math.cos(angle) * PARTICLE_SPEED;
+            let target_vy = Math.sin(angle) * PARTICLE_SPEED;
+
+            if (mouse.x !== null) {
+                const dx = p.x - mouse.x;
+                const dy = p.y - mouse.y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+
+                if (distance < INTERACTION_RADIUS) {
+                    target_vx -= dx * ATTRACTION_FORCE;
+                    target_vy -= dy * ATTRACTION_FORCE;
+                    target_vx += dy * ORBITAL_FORCE * (1 - distance / INTERACTION_RADIUS);
+                    target_vy -= dx * ORBITAL_FORCE * (1 - distance / INTERACTION_RADIUS);
+                }
             }
-        }
+
+            p.vx = lerp(p.vx, target_vx, LERP_SPEED);
+            p.vy = lerp(p.vy, target_vy, LERP_SPEED);
+            p.x += p.vx;
+            p.y += p.vy;
+
+            if (p.x > canvas.width + p.radius) p.x = -p.radius;
+            if (p.x < -p.radius) p.x = canvas.width + p.radius;
+            if (p.y > canvas.height + p.radius) p.y = -p.radius;
+            if (p.y < -p.radius) p.y = canvas.height + p.radius;
+
+            const color = p.color_choice === 1 ? colorState.c1 : colorState.c2;
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+            ctx.fillStyle = `rgba(${Math.floor(color.r)}, ${Math.floor(color.g)}, ${Math.floor(color.b)}, ${p.opacity})`;
+            ctx.fill();
+        });
         
-        time += NOISE_SPEED;
+        time += 0.001;
         requestAnimationFrame(animate);
     }
 
+    // Event Listeners voor de muis
+    window.addEventListener('mousemove', (event) => {
+        mouse.x = event.clientX;
+        mouse.y = event.clientY;
+    });
+    canvas.addEventListener('mouseleave', () => {
+        mouse.x = null;
+        mouse.y = null;
+    });
+
+    // Start alles
+    window.addEventListener('resize', resizeCanvas);
     resizeCanvas();
     animate();
 });
