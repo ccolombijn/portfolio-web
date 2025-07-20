@@ -59,7 +59,7 @@ class AppServiceProvider extends ServiceProvider
         })->all();
 
         View::share('navigationItems', $navigationItems);
-        
+        View::share('contactData', $this->app->make('contact.data'));
         $this->app->when([
             PageController::class,
             PortfolioController::class,

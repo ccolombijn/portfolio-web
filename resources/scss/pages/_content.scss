@@ -1,5 +1,6 @@
 .content {
-    @apply bg-[url(/images/dots01.png)] bg-contain;
+    @apply bg-[url(/images/dots01.png)] bg-size-[50%];
+    
     &__container {
         @apply container p-16;
     }
@@ -8,5 +9,8 @@
     }
     #ai-explanation {
         @apply bg-[url(/images/sparkle.png)] bg-no-repeat pl-10;
+        &:not(:empty) {
+            @apply min-h-[35px];
+        }
     }
 }

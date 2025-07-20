@@ -1,3 +1,18 @@
 .footer {
-
+    @apply bg-stone-200 py-12 bg-[url(/images/dots01.png)] bg-contain;
+    a {
+        @apply text-neutral-500;
+    }
+    &__brand {
+        @apply inline-block bg-[url(/images/ccc_logo_grey.png)] bg-contain bg-center h-[80px] w-[100px] bg-no-repeat;
+        span {
+            @apply hidden;
+        }
+    }
+    &__sitemap {
+        @apply text-xl;
+        .active {
+            @apply font-bold;
+        }
+    }
 }

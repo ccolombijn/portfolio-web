@@ -1,10 +1,12 @@
-[
-    {
-        "address" : "Rijtuigweg-zuid 303",
-        "telephone" : "+31610830415",
-        "email" : "ccolombijn@gmail.com",
+
+{
+    "name" : "Christoffel Cornelis Colombijn", 
+    "address" : "Rijtuigweg-zuid 303",
+    "telephone" : "+31610830415",
+    "email" : "ccolombijn@gmail.com",
+    "socialmedia" : {
         "linkedin" : "https://www.linkedin.com/in/ccolombijn/",
         "github" : "https://github.com/ccolombijn",
         "behance" : "https://www.behance.net/ccolombijn"
     }
-]
+}
