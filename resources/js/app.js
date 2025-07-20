@@ -17,11 +17,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- CUSTOMIZATION ---
     const PARTICLE_COUNT = 1500;
-    const PARTICLE_SPEED = 0.2;
+    const PARTICLE_SPEED = 0.3;
     const NOISE_SCALE = 1000;
     const MAX_RADIUS = 1.2;
     const COLOR_TRANSITION_SPEED = 0.005;
-    const INTERACTION_RADIUS = 200;
+    const INTERACTION_RADIUS = 100;
     const ATTRACTION_FORCE = 0.002;
     const ORBITAL_FORCE = 0.05;
     const LERP_SPEED = 0.05;
@@ -135,4 +135,40 @@ document.addEventListener('DOMContentLoaded', () => {
     window.addEventListener('resize', resizeCanvas);
     resizeCanvas();
     animate();
+});
+
+const clickableWords = document.querySelectorAll('.click-me');
+function typewriterEffect(text) {
+    let i = 0;
+    const delay = 25; // delay in milliseconds
+    const explanation = document.getElementById("ai-explanation")
+    explanation.innerHTML = ''
+    function typeNextChar() {
+        if (i < text.length) {
+            explanation.innerHTML += text.charAt(i);
+             i++;
+            setTimeout(typeNextChar, delay);
+        }
+    }
+    
+    typeNextChar();
+}
+[...clickableWords].forEach( word => {
+    const textContent = word.textContent;
+    const crsf = document.querySelector('meta[name="crsf"]').getAttribute('content');
+    word.addEventListener('click',event => {
+        document.querySelector('#ai-explanation').innerHTML = '<img src="/images/loading.gif" width="35" />';
+        fetch('/ai-generate', {
+            method: "POST",
+            headers: { 'X-CSRF-TOKEN': crsf },
+            body: JSON.stringify({
+               word : textContent
+            })
+          },)
+            .then((response) => response.text())
+            .then((res) => {
+                //document.querySelector('#ai-explanation').textContent = res;
+                typewriterEffect(res);
+            });
+    })
 });

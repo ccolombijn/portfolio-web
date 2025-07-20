@@ -3,5 +3,10 @@
     &__container {
         @apply container p-16;
     }
-    
+    .click-me{
+        @apply cursor-pointer hover:underline;
+    }
+    #ai-explanation {
+        @apply bg-[url(/images/sparkle.png)] bg-no-repeat pl-10;
+    }
 }

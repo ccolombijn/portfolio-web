@@ -3,6 +3,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\PageController;
 use App\Http\Controllers\PortfolioController;
 use App\Http\Controllers\ContactController;
+use App\Http\Controllers\GeminiController;
 
 foreach (app('pages.data') as $page) {
 
@@ -20,5 +21,6 @@ foreach (app('pages.data') as $page) {
         ->name($routeName);
 }
 
+Route::post('/ai-generate', [GeminiController::class, 'generate'])->name('gemini.generate');
 Route::get('/portfolio/{project:slug}', [PortfolioController::class, 'show'])->name('portfolio.show');
 Route::post('/contact', [ContactController::class, 'submit'])->name('contact.submit');
