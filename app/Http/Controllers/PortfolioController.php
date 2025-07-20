@@ -12,19 +12,20 @@ class PortfolioController extends Controller
         parent::__construct($content);
         $this->projects = $projects;
     }
-
-    public function show(array $page)
+    public function show(array $page) {}
+    public function project(string $project, array $page)
     {
         // retrieve project 
         $projectRoute = request()->route('project');
-        $projectName = $projectRoute->getName();
-        $projectKey = array_search($projectName, 
+        $projectKey = array_search($projectRoute, 
             array_column($this->projects, 'name'));
         $project = $this->projects[$projectKey];
+        $project['header'] = $this->getPugMarkdownHTML('header/projects', $project);
+        $project['description'] = $this->getPugMarkdownHTML('content/projects', $project);
         // construct data
         $this->data = [
             'page' => $page,
-            'item' => $project,
+            'project' => (object) $project,
         ];
         // add parts
         foreach ($this->parts as $part) { 

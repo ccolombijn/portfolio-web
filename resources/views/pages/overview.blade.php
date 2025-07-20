@@ -8,7 +8,7 @@
         <div class="content__container">
             <h1>{{ $page['title'] }}</h1>
             @foreach ($items as $item)
-                </a><a href="{{ route('portfolio.show', ['project' => $item['slug']]) }}">
+                <a href="{{ route('portfolio.project', ['project' => $item['slug']]) }}">
                     <h2>{{ $item['title'] }}</h2>
                 </a>
             @endforeach

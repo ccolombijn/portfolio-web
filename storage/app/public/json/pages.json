@@ -21,6 +21,14 @@
         "method" : "index"
     },
     {
+        "name" : "portfolio",
+        "title" : "Portfolio",
+        "route" : "/portfolio/{project}",
+        "controller" : "PortfolioController",
+        "method" : "project",
+        "exclude_nav" : true
+    },
+    {
         "name" : "contact",
         "title" : "Contact",
         "route" : "/contact",
