@@ -1,0 +1,7 @@
+form.form {
+
+    input, textarea {
+        @apply w-full box-border border border-solid border-stone-200 backdrop-blur-xs p-2 rounded-sm;
+    }
+
+}

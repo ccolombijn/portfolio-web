@@ -13,6 +13,12 @@ class ContactController extends Controller
 
     public function show(array $page) 
     {
-        return view('pages.contact', ['page' => $page]);
+        $header = $this->getPugMarkdownHTML('header',$page);
+        $footer = $this->getPugMarkdownHTML('footer',$page);
+        return view('pages.contact', [
+            'page' => $page,
+            'header' => $header,
+            'footer' => $footer
+        ]);
     }
 }

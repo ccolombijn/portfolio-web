@@ -1,7 +1,7 @@
 import { createNoise3D } from 'simplex-noise';
 
 document.addEventListener('DOMContentLoaded', () => {
-
+// --- HEADER ANIMATIONS ----------------------
     const canvas = document.getElementById('dot-wave-canvas');
     const gradientBg = document.querySelector('.animated-gradient-bg');
     if (!canvas || !gradientBg) {
@@ -13,7 +13,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let time = 0;
     let particles = [];
     const mouse = { x: null, y: null };
-
+    // CONFIG HEADER ANIMATIONS
     const PARTICLE_COUNT = 1200;
     const PARTICLE_SPEED = 0.4;
     const NOISE_SCALE = 1000;
@@ -128,7 +128,7 @@ document.addEventListener('DOMContentLoaded', () => {
     resizeCanvas();
     animate();
 });
-
+// --- AI-CLICKWORD-EXPLANATION -----------------
 const clickableWords = document.querySelectorAll('.click-me');
 function typewriterEffect(text) {
     let i = 0;
@@ -161,5 +161,18 @@ function typewriterEffect(text) {
             .then((res) => {
                 typewriterEffect(res);
             });
-    })
+    });
 });
+
+//--- FORM ------------------------------------
+const form = document.querySelector('form.form');
+if(form){
+    const inputs = form.querySelectorAll('[name]');
+    [...inputs].forEach(input => {
+        const label = form.querySelector('label[for="'+input.name+'"]');
+        if(label) {
+            input.placeholder = label.textContent;
+            label.innerText = '';
+        }
+    });
+}
