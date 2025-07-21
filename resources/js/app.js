@@ -1,39 +1,81 @@
 import { createNoise3D } from 'simplex-noise';
 
 document.addEventListener('DOMContentLoaded', () => {
-// --- HEADER ANIMATIONS ----------------------
+
+    const noise3D = createNoise3D(Math.random);
     const canvas = document.getElementById('dot-wave-canvas');
     const gradientBg = document.querySelector('.animated-gradient-bg');
     if (!canvas || !gradientBg) {
         console.error("Een van de benodigde elementen (.animated-gradient-bg of #dot-wave-canvas) is niet gevonden.");
         return;
     }
-    const noise3D = createNoise3D(Math.random);
+
     const ctx = canvas.getContext('2d');
     let time = 0;
     let particles = [];
     const mouse = { x: null, y: null };
-    // CONFIG HEADER ANIMATIONS
+
+    // --- CUSTOMIZATION ---
     const PARTICLE_COUNT = 1200;
-    const PARTICLE_SPEED = 0.4;
+    const PARTICLE_SPEED = 0.2;
     const NOISE_SCALE = 1000;
-    const MAX_RADIUS = 1;
+    const MAX_RADIUS = 1.2;
     const COLOR_TRANSITION_SPEED = 0.005;
-    const INTERACTION_RADIUS = 250;
-    const ATTRACTION_FORCE = 0.008;
+    const INTERACTION_RADIUS = 200;
+    const ATTRACTION_FORCE = 0.002;
     const ORBITAL_FORCE = 0.05;
     const LERP_SPEED = 0.05;
+    // -------------------
 
-    let colorState = {
-        c1: generateRandomColor(),
-        c2: generateRandomColor(),
-        t1: generateRandomColor(),
-        t2: generateRandomColor()
-    };
+    /**
+     * Generates two compatible random colors
+     * @returns {[{r,g,b}, {r,g,b}]} Een array met twee RGB-kleurobjecten.
+     */
+    function generateCompatibleColorPair() {
+        const h = Math.random();
+        const s = 0.5 + Math.random() * 0.2;
+        const l = 0.45 + Math.random() * 0.1;
+        const color1 = hslToRgb(h, s, l);
+        const secondHue = (h + 0.45 + Math.random() * 0.1) % 1.0;
+        const color2 = hslToRgb(secondHue, s, l);
 
-    function generateRandomColor() {
-        return { r: Math.floor(Math.random() * 256), g: Math.floor(Math.random() * 256), b: Math.floor(Math.random() * 256) };
+        return [color1, color2];
     }
+    
+    /**
+     * Converts HSL to RGB.
+     * h, s, l are expected as values between 0 and 1.
+     * @returns {{r: number, g: number, b: number}} RGB-object with values between 0 en 255.
+     */
+    function hslToRgb(h, s, l) {
+        let r, g, b;
+        if (s == 0) {
+            r = g = b = l; // achromatic
+        } else {
+            const hue2rgb = (p, q, t) => {
+                if (t < 0) t += 1;
+                if (t > 1) t -= 1;
+                if (t < 1 / 6) return p + (q - p) * 6 * t;
+                if (t < 1 / 2) return q;
+                if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6;
+                return p;
+            };
+            const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+            const p = 2 * l - q;
+            r = hue2rgb(p, q, h + 1 / 3);
+            g = hue2rgb(p, q, h);
+            b = hue2rgb(p, q, h - 1 / 3);
+        }
+        return { r: Math.round(r * 255), g: Math.round(g * 255), b: Math.round(b * 255) };
+    }
+
+    const initialColors = generateCompatibleColorPair();
+    let colorState = {
+        c1: initialColors[0],
+        c2: initialColors[1],
+        t1: generateCompatibleColorPair()[0],
+        t2: generateCompatibleColorPair()[1]
+    };
 
     function lerp(start, end, amount) {
         return start + (end - start) * amount;
@@ -63,6 +105,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function animate() {
+        // Color animation
         colorState.c1.r = lerp(colorState.c1.r, colorState.t1.r, COLOR_TRANSITION_SPEED);
         colorState.c1.g = lerp(colorState.c1.g, colorState.t1.g, COLOR_TRANSITION_SPEED);
         colorState.c1.b = lerp(colorState.c1.b, colorState.t1.b, COLOR_TRANSITION_SPEED);
@@ -71,9 +114,14 @@ document.addEventListener('DOMContentLoaded', () => {
         colorState.c2.b = lerp(colorState.c2.b, colorState.t2.b, COLOR_TRANSITION_SPEED);
         gradientBg.style.setProperty('--color1', `rgb(${colorState.c1.r}, ${colorState.c1.g}, ${colorState.c1.b})`);
         gradientBg.style.setProperty('--color2', `rgb(${colorState.c2.r}, ${colorState.c2.g}, ${colorState.c2.b})`);
-        if (Math.abs(colorState.c1.r - colorState.t1.r) < 1) { colorState.t1 = generateRandomColor(); }
-        if (Math.abs(colorState.c2.r - colorState.t2.r) < 1) { colorState.t2 = generateRandomColor(); }
+        
+        if (Math.abs(colorState.c1.r - colorState.t1.r) < 1) {
+            const newPair = generateCompatibleColorPair();
+            colorState.t1 = newPair[0];
+            colorState.t2 = newPair[1];
+        }
 
+        // Particle animation
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         particles.forEach(p => {
             const noise_val = noise3D(p.noise_offset_x, p.noise_offset_y, time);
@@ -124,6 +172,7 @@ document.addEventListener('DOMContentLoaded', () => {
         mouse.y = null;
     });
 
+    // Start alles
     window.addEventListener('resize', resizeCanvas);
     resizeCanvas();
     animate();
