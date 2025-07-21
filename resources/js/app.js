@@ -2,34 +2,31 @@ import { createNoise3D } from 'simplex-noise';
 
 document.addEventListener('DOMContentLoaded', () => {
 
-    const noise3D = createNoise3D(Math.random);
     const canvas = document.getElementById('dot-wave-canvas');
     const gradientBg = document.querySelector('.animated-gradient-bg');
     if (!canvas || !gradientBg) {
         console.error("Een van de benodigde elementen (.animated-gradient-bg of #dot-wave-canvas) is niet gevonden.");
         return;
     }
-
+    const noise3D = createNoise3D(Math.random);
     const ctx = canvas.getContext('2d');
     let time = 0;
     let particles = [];
     const mouse = { x: null, y: null };
 
-    // --- CUSTOMIZATION ---
-    const PARTICLE_COUNT = 1500;
-    const PARTICLE_SPEED = 0.3;
+    const PARTICLE_COUNT = 1200;
+    const PARTICLE_SPEED = 0.4;
     const NOISE_SCALE = 1000;
-    const MAX_RADIUS = 1.2;
+    const MAX_RADIUS = 1;
     const COLOR_TRANSITION_SPEED = 0.005;
-    const INTERACTION_RADIUS = 100;
-    const ATTRACTION_FORCE = 0.002;
+    const INTERACTION_RADIUS = 250;
+    const ATTRACTION_FORCE = 0.008;
     const ORBITAL_FORCE = 0.05;
     const LERP_SPEED = 0.05;
-    // -------------------
 
     let colorState = {
-        c1: { r: 31, g: 153, b: 163 },
-        c2: { r: 193, g: 70, b: 111 },
+        c1: generateRandomColor(),
+        c2: generateRandomColor(),
         t1: generateRandomColor(),
         t2: generateRandomColor()
     };
@@ -66,7 +63,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function animate() {
-        // Kleuranimatie
         colorState.c1.r = lerp(colorState.c1.r, colorState.t1.r, COLOR_TRANSITION_SPEED);
         colorState.c1.g = lerp(colorState.c1.g, colorState.t1.g, COLOR_TRANSITION_SPEED);
         colorState.c1.b = lerp(colorState.c1.b, colorState.t1.b, COLOR_TRANSITION_SPEED);
@@ -78,10 +74,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if (Math.abs(colorState.c1.r - colorState.t1.r) < 1) { colorState.t1 = generateRandomColor(); }
         if (Math.abs(colorState.c2.r - colorState.t2.r) < 1) { colorState.t2 = generateRandomColor(); }
 
-        // Deeltjesanimatie
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         particles.forEach(p => {
-            // AANGEPAST: De aanroep naar de noise-functie
             const noise_val = noise3D(p.noise_offset_x, p.noise_offset_y, time);
             const angle = noise_val * Math.PI * 2;
             let target_vx = Math.cos(angle) * PARTICLE_SPEED;
@@ -121,7 +115,6 @@ document.addEventListener('DOMContentLoaded', () => {
         requestAnimationFrame(animate);
     }
 
-    // Event Listeners voor de muis
     window.addEventListener('mousemove', (event) => {
         mouse.x = event.clientX;
         mouse.y = event.clientY;
@@ -131,7 +124,6 @@ document.addEventListener('DOMContentLoaded', () => {
         mouse.y = null;
     });
 
-    // Start alles
     window.addEventListener('resize', resizeCanvas);
     resizeCanvas();
     animate();
@@ -140,7 +132,7 @@ document.addEventListener('DOMContentLoaded', () => {
 const clickableWords = document.querySelectorAll('.click-me');
 function typewriterEffect(text) {
     let i = 0;
-    const delay = 25; // delay in milliseconds
+    const delay = 15; 
     const explanation = document.getElementById("ai-explanation")
     explanation.innerHTML = ''
     function typeNextChar() {
@@ -167,7 +159,6 @@ function typewriterEffect(text) {
           },)
             .then((response) => response.text())
             .then((res) => {
-                //document.querySelector('#ai-explanation').textContent = res;
                 typewriterEffect(res);
             });
     })
