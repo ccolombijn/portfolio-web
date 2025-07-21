@@ -18,7 +18,7 @@
     }
     &__title {
         
-        @apply inline-block float-left;
+        @apply inline-block float-left relative z-10;
         
         span {
             @apply hidden;

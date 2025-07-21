@@ -57,9 +57,13 @@ class AppServiceProvider extends ServiceProvider
             
             return $page;
         })->all();
-
+        $contactData = $this->app->make('contact.data');
         View::share('navigationItems', $navigationItems);
-        View::share('contactData', $this->app->make('contact.data'));
+        View::share('contactData', $contactData);
+        $this->app->when(ContactController::class)
+            ->needs('$contactData')
+            ->give($contactData);
+
         $this->app->when([
             PageController::class,
             PortfolioController::class,
@@ -68,7 +72,6 @@ class AppServiceProvider extends ServiceProvider
         ])
             ->needs('$content')
             ->give($this->app->make('content.data'));
-        
         $this->app->when(PortfolioController::class)
             ->needs('$projects')
             ->give($this->app->make('projects.data'));

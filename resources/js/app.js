@@ -172,12 +172,13 @@ document.addEventListener('DOMContentLoaded', () => {
         mouse.y = null;
     });
 
-    // Start alles
     window.addEventListener('resize', resizeCanvas);
     resizeCanvas();
     animate();
 });
-// --- AI-CLICKWORD-EXPLANATION -----------------
+/**
+ * AI Clickwords
+ */
 const clickableWords = document.querySelectorAll('.click-me');
 function typewriterEffect(text) {
     let i = 0;
@@ -197,6 +198,7 @@ function typewriterEffect(text) {
 [...clickableWords].forEach( word => {
     const textContent = word.textContent;
     const crsf = document.querySelector('meta[name="crsf"]').getAttribute('content');
+    let status
     word.addEventListener('click',event => {
         document.querySelector('#ai-explanation').innerHTML = '<img src="/images/loading.gif" width="35" />';
         fetch('/ai-generate', {
@@ -206,14 +208,23 @@ function typewriterEffect(text) {
                word : textContent
             })
           },)
-            .then((response) => response.text())
+            .then((response) => {
+                if(response.status === 200){
+                    return response.text()
+                }else {
+                    return 'Er heeft zich een (tijdelijke) fout voorgedaan waardoor uitleg van '+textContent+' (nu) helaas niet mogelijk is. Probeer het later nog eens.'
+                }
+                
+            })
             .then((res) => {
                 typewriterEffect(res);
             });
     });
 });
 
-//--- FORM ------------------------------------
+/**
+ * Form
+ */
 const form = document.querySelector('form.form');
 if(form){
     const inputs = form.querySelectorAll('[name]');
@@ -225,3 +236,16 @@ if(form){
         }
     });
 }
+
+// --- RESPONSIVE ---
+const mobileOpen = document.querySelector('.nav-mobile-open');
+const mobileClose = document.querySelector('.nav-mobile-close');
+const body = document.querySelector('body');
+mobileOpen.addEventListener('click', event => {
+    body.classList.add('open')
+    //event.target.innerHTML = '<i class="fa-solid fa-xmark"></i>';
+    
+});
+mobileClose.addEventListener('click', event => {
+    body.classList.remove('open');
+})

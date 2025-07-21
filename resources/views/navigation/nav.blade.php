@@ -1,4 +1,6 @@
 <nav>
+    <div class="nav-mobile-open"><i class="fa-solid fa-bars"></i></div>
+    <div class="nav-mobile-close"><i class="fa-solid fa-xmark"></i></div>
     <ul class="nav">
     @foreach ($navigationItems as $item)
         @if(!isset($item['exclude_nav']) &&  $item['title'] !== '')
