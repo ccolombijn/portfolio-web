@@ -13,8 +13,7 @@ Mijn professionele kracht ligt in het scheppen van overzicht, het omzetten van i
 - **Backend**: <span class="click-me">PHP</span> / <span class="click-me">Laravel</span> / <span class="click-me">Python</span>  / <span class="click-me">Flask</span>
 - **Methodieken en tools**: <span class="click-me">Scrum</span>, <span class="click-me">Jira</span> en <span class="click-me">Confluence</span> worden gebruikt om voortgang inzichtelijk te maken en doelen te structureren. 
 - Ervaring met <span class="click-me">Git</span> voor versiebeheer.
-- **Efficiëntie**: Ik zet AI in om processen te stroomlijnen en efficiënter te werken.
+- **Efficiëntie**: Ik zet AI in om processen te stroomlijnen en efficiënter te werken. Bijvoorbeeld, klik een van bovenstaande woorden aan om AI uit te laten leggen wat ze betekenen.
 
 <div id="ai-explanation"></div>
 
-Bijvoorbeeld, klik een van bovenstaande woorden aan om AI uit te laten leggen wat ze betekenen 

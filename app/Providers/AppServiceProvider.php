@@ -50,11 +50,11 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         $pagesData = $this->app->make('pages.data');
+        $contentData = $this->app->make('content.data');
         $navigationItems = collect($pagesData)->map(function ($page) {
             $page['routeName'] = isset($page['method'])
                 ? $page['name'] . '.' . $page['method']
                 : $page['name'];
-            
             return $page;
         })->all();
         $contactData = $this->app->make('contact.data');
@@ -71,7 +71,7 @@ class AppServiceProvider extends ServiceProvider
             GeminiController::class
         ])
             ->needs('$content')
-            ->give($this->app->make('content.data'));
+            ->give($contentData);
         $this->app->when(PortfolioController::class)
             ->needs('$projects')
             ->give($this->app->make('projects.data'));

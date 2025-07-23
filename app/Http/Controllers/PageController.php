@@ -12,13 +12,14 @@ class PageController extends Controller
     {
 
          $contentData = [];
-         foreach ($this->parts as $part) {
+         $parts = isset($page['parts']) ? $page['parts'] : $this->parts;
+         foreach ($parts as $part) {
              $contentData[$part] = $this->getPugMarkdownHTML($part, $page) ?? '';
          }
- 
+
          $data = [
              'page' => $page,
-             'parts' => $this->parts,
+             'parts' => $parts,
              'content' => $contentData,
          ];
  

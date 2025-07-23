@@ -179,49 +179,48 @@ document.addEventListener('DOMContentLoaded', () => {
 /**
  * AI Clickwords
  */
-const clickableWords = document.querySelectorAll('.click-me');
-function typewriterEffect(text) {
-    let i = 0;
-    const delay = 15; 
-    const explanation = document.getElementById("ai-explanation")
-    explanation.innerHTML = ''
-    function typeNextChar() {
-        if (i < text.length) {
-            explanation.innerHTML += text.charAt(i);
-             i++;
-            setTimeout(typeNextChar, delay);
-        }
-    }
-    
-    typeNextChar();
-}
-[...clickableWords].forEach( word => {
+[...document.querySelectorAll('.click-me')].forEach( word => {
     const textContent = word.textContent;
-    const crsf = document.querySelector('meta[name="crsf"]').getAttribute('content');
-    let status
+    const explanationElement = document.querySelector('#ai-explanation');
     word.addEventListener('click',event => {
-        document.querySelector('#ai-explanation').innerHTML = '<img src="/images/loading.gif" width="35" />';
-        fetch('/ai-generate', {
-            method: "POST",
-            headers: { 'X-CSRF-TOKEN': crsf },
-            body: JSON.stringify({
-               word : textContent
-            })
-          },)
-            .then((response) => {
-                if(response.status === 200){
-                    return response.text()
-                }else {
-                    return 'Er heeft zich een (tijdelijke) fout voorgedaan waardoor uitleg van '+textContent+' (nu) helaas niet mogelijk is. Probeer het later nog eens.'
-                }
-                
-            })
-            .then((res) => {
-                typewriterEffect(res);
-            });
+        explanationElement.innerHTML = '<img src="/images/loading.gif" width="35" /> <span>Wachten..</span>';
+        fetchStream({
+            word : textContent,
+            stream : true
+        },'/ai-generate',explanationElement);
     });
 });
+function fetchStream(request,endpoint,target){
+    const decoder = new TextDecoder();
+    let fullResponse = '';
+    fetch(endpoint, {
+        method : 'POST',
+        headers: { 
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+            'Content-Type': 'application/json'
+        },
+        body : JSON.stringify(request)
+    }).then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP error status: ${response.status}`);
+        }
+        fullResponse = '';
+        target.innerHTML = ''; 
 
+        const reader = response.body.getReader();
+        function processStream() {
+            reader.read().then(({ done, value }) => {
+                if (done) {
+                    return;
+                }
+                fullResponse += decoder.decode(value, { stream: true });
+                target.innerHTML = marked.parse(fullResponse);
+                return processStream();
+            });
+        }
+        processStream();
+    }).catch(error => console.error(error));
+}
 /**
  * Form
  */
@@ -237,14 +236,14 @@ if(form){
     });
 }
 
-// --- RESPONSIVE ---
+/**
+ * Responsive
+ */
 const mobileOpen = document.querySelector('.nav-mobile-open');
 const mobileClose = document.querySelector('.nav-mobile-close');
 const body = document.querySelector('body');
 mobileOpen.addEventListener('click', event => {
     body.classList.add('open')
-    //event.target.innerHTML = '<i class="fa-solid fa-xmark"></i>';
-    
 });
 mobileClose.addEventListener('click', event => {
     body.classList.remove('open');

@@ -1,7 +1,7 @@
 .header {
-    @apply bg-slate-900 text-white h-screen pt-8;
+    @apply bg-slate-900 text-white h-screen;
     &__content {
-        @apply text-center py-[15vh] align-middle font-thin;
+        @apply text-center py-[10vh] sm:py-[15vh] align-middle font-thin;
         p {
             @apply p-4 font-thin;
         }
@@ -13,12 +13,12 @@
         }
     }
     &__container {
-        @apply relative z-50 backdrop-blur-xs;
-        mask: linear-gradient(black, black, transparent);
+        @apply relative;
+        //mask: linear-gradient(black, black, transparent);
     }
     &__title {
         
-        @apply inline-block float-left relative z-10;
+        @apply inline-block float-left relative z-50;
         
         span {
             @apply hidden;
@@ -104,7 +104,11 @@ $end-color-2: hsl(random(360), 70%, 60%);
   // Koppel de animatie
   // animation: moveAndChangeColor 20s ease-in-out infinite;
 }
+#dot-wave-canvas {
+    display: none;
+}
 .animated-clouds {
+    display: none;
     position: absolute;
     inset: 0;
     width: 200%; 
@@ -114,8 +118,8 @@ $end-color-2: hsl(random(360), 70%, 60%);
     background-repeat: repeat-x; 
     opacity: 0.2; 
     animation: pan-clouds 320s linear infinite;
+    
 }
-  
 
 @keyframes pan-clouds {
     0% {
@@ -123,5 +127,19 @@ $end-color-2: hsl(random(360), 70%, 60%);
     }
     100% {
         transform: translateX(-50%); 
+    }
+}
+  
+@media only screen and (max-width: 600px) {
+    .animated-clouds {
+        background-size: 250% auto;
+    }
+    @keyframes pan-clouds {
+        0% {
+            transform: translateX(0);
+        }
+        100% {
+            transform: translateX(-250%); 
+        }
     }
 }

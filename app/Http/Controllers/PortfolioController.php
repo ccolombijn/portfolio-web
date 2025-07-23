@@ -16,10 +16,9 @@ class PortfolioController extends Controller
     public function project(string $project, array $page)
     {
         // retrieve project 
-        $projectRoute = request()->route('project');
-        $projectKey = array_search($projectRoute, 
-            array_column($this->projects, 'name'));
-        $project = $this->projects[$projectKey];
+       
+        $project = $this->projects[array_search(request()->route('project'), 
+            array_column($this->projects, 'name'))];
         $project['header'] = $this->getPugMarkdownHTML('header/projects', $project);
         $project['description'] = $this->getPugMarkdownHTML('content/projects', $project);
         // construct data

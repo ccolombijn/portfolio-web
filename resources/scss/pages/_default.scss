@@ -20,7 +20,7 @@ ul, p, :is(h1, h2, h3, h4, h5, h6) {
 }
 
 p > img {
-    @apply w-[15vw] float-left mr-8;
+    @apply w-[50vw] sm:w-[15vw] float-left mr-8;
 }
 
 [class$="__container"] {
@@ -30,3 +30,14 @@ p > img {
     @apply grid grid-cols-12;
 }
 
+@keyframes pulse {
+    0% {
+        opacity: 0.1;
+    }
+    50% {
+        opacity: 0.8;
+    }
+    100% {
+        opacity: 0.1;
+    }
+}

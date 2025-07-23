@@ -2,7 +2,7 @@
     @apply bg-[url(/images/dots01.png)] bg-size-[50%];
     
     &__container {
-        @apply container p-16;
+        @apply container p-8 sm:p-16;
     }
     .click-me{
         @apply cursor-pointer hover:underline;
@@ -11,6 +11,15 @@
         @apply bg-[url(/images/sparkle.png)] bg-no-repeat pl-10;
         &:not(:empty) {
             @apply min-h-[35px];
+        }
+        img {
+            float: left;
+        }
+        span {
+            animation: pulse 1s ease-in-out infinite;
+        }
+        p{
+            @apply p-0;
         }
     }
 }
