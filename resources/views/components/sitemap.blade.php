@@ -3,7 +3,7 @@
         @if(!isset($item['exclude_nav']))
         <li class="nav-item">
             <a href="{{ route($item['routeName']) }}"
-                class="nav-link{{ request()->routeIs($item['routeName']) ? ' active' : '' }}">
+                class="nav-link{{ request()->routeIs($item['name'] . '*') ? ' active' : '' }}">
                 {{ $item['title'] }}
             </a>
         </li>

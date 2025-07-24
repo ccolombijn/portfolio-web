@@ -16,7 +16,7 @@ h3 {
 }
 
 ul, p, :is(h1, h2, h3, h4, h5, h6) {
-    @apply p-4;
+    @apply p-4 text-center sm:text-left;
 }
 
 p > img {

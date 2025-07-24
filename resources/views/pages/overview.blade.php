@@ -4,11 +4,11 @@
     @include('layouts.header' ,['header' => $header])
 @endsection
 @section('content')
-    <section class="content">
+    <section class="content {{ $name }}">
         <div class="content__container">
             <h1>{{ $page['title'] }}</h1>
             @foreach ($items as $item)
-                <a href="{{ route('portfolio.project', ['project' => $item['slug']]) }}">
+                <a href="{{ route($route, [$key => $item['slug']]) }}">
                     <h2>{{ $item['title'] }}</h2>
                 </a>
             @endforeach

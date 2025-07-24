@@ -13,7 +13,7 @@ class PageController extends Controller
 
          $contentData = [];
          $parts = isset($page['parts']) ? $page['parts'] : $this->parts;
-         foreach ($parts as $part) {
+         foreach ($parts as $part) { // get .md or .pug content for each part
              $contentData[$part] = $this->getPugMarkdownHTML($part, $page) ?? '';
          }
 

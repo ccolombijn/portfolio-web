@@ -24,7 +24,10 @@ class PortfolioController extends Controller
         // construct data
         $this->data = [
             'page' => $page,
+            'name' => 'portfolio',
             'project' => (object) $project,
+            'route' => 'portfolio.project',
+            'key' => 'project'
         ];
         // add parts
         foreach ($this->parts as $part) { 
@@ -43,7 +46,10 @@ class PortfolioController extends Controller
     {
         $this->data = [
             'page' => $page,
+            'name' => 'portfolio',
             'items' => $this->projects,
+            'route' => 'portfolio.project',
+            'key' => 'project'
         ];
         foreach ($this->parts as $part) { 
             $this->data[$part] = $this->getPugMarkdownHTML($part, $page) ?? '';

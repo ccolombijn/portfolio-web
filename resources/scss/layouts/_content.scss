@@ -8,9 +8,11 @@
         @apply cursor-pointer hover:underline;
     }
     #ai-explanation {
-        @apply bg-[url(/images/sparkle.png)] bg-no-repeat pl-10;
+        @apply bg-[url(/images/sparkle.png)] bg-no-repeat;
+        background-position-y: 16px;
+        background-position-x: 4px;
         &:not(:empty) {
-            @apply min-h-[35px];
+            @apply min-h-[35px] bg-[#cccccc6b] p-4 pl-10 rounded-md;
         }
         img {
             float: left;
