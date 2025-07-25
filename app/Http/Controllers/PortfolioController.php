@@ -21,11 +21,12 @@ class PortfolioController extends Controller
             array_column($this->projects, 'name'))];
         $project['header'] = $this->getPugMarkdownHTML('header/projects', $project);
         $project['description'] = $this->getPugMarkdownHTML('content/projects', $project);
+        $project['name'] = 'portfolio';
         // construct data
         $this->data = [
             'page' => $page,
             'name' => 'portfolio',
-            'project' => (object) $project,
+            'item' => (object) $project,
             'route' => 'portfolio.project',
             'key' => 'project'
         ];

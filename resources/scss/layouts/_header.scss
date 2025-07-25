@@ -8,6 +8,12 @@
         h2 {
             @apply p-4 text-3xl font-bold relative z-10;
         }
+        h2, p {
+            @apply text-center;
+        }
+        img {
+            @apply relative z-10 h-[50vh] m-auto;
+        }
         .btn {
             @apply text-[22px] relative z-10;
         }
