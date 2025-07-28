@@ -60,6 +60,7 @@ class AppServiceProvider extends ServiceProvider
         $contactData = $this->app->make('contact.data');
         View::share('navigationItems', $navigationItems);
         View::share('contactData', $contactData);
+        View::share('content', $contentData);
         $this->app->when(ContactController::class)
             ->needs('$contactData')
             ->give($contactData);

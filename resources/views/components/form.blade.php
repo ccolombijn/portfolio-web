@@ -2,11 +2,11 @@
     @csrf
     @foreach($fields as $name => $type)
         <p class="form__{{$name}}">
-            <label for="{{$name}}">{{$name}}</label>
+            <label for="{{$name}}">{{$content[$name]}}</label>
             @if($type === 'textarea')
                 <textarea name="{{$name}}" id="message"></textarea>
             @else
-                 <input type="{{$type}}" name="{{$name}}" id="{{$name}}" />
+                <input type="{{$type}}" name="{{$name}}" id="{{$name}}" />
             @endif
         </p>
     @endforeach
