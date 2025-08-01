@@ -28,7 +28,7 @@ class GeminiController extends Controller
     public function generate(Request $request)
     {
         $data = $request->json()->all();
-        $model = isset($data['model']) ? $data['model'] : 'gemini-2.5-flash';
+        $model = isset($data['model']) ? $data['model'] : 'gemini-2.5-flash-lite';
         $prompt = $this->prompt($data);
         
         if(isset($data['stream'])){
@@ -102,7 +102,9 @@ class GeminiController extends Controller
             ];
         } else {
             $prompts = [
-                'explanation' => 'Leg kort (in niet al te veel woorden), en in zo eenvoudig mogelijke bewoordingen, voor een leek (de lezer aan wie je dit uitlegt), uit wat ' . $data['word'] . ' betekent - in zover relevant, met betrekking tot web development, grafische vormgeving of aanverwante software voor teams (je hoeft dit verder niet te benoemen)'
+                'explanation' => 'Leg kort (in niet al te veel woorden), en in zo eenvoudig mogelijke bewoordingen, voor een leek (de lezer aan wie je dit uitlegt), uit wat ' . $data['input']. ' betekent - in zover relevant, met betrekking tot web development, grafische vormgeving of aanverwante software voor teams (je hoeft dit verder niet te benoemen)',
+                'summarize' => 'Geef een korte samenvatting (in niet al te veel woorden, maximaal enkele regels) van de volgende tekst alsof ik het aan iemand vertel over mijn tekst : ' .$data['input']
+            
             ];
             $response = $prompts[$data['prompt']];
         }

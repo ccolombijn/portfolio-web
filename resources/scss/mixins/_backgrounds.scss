@@ -1,0 +1,6 @@
+@mixin background-image-webp($path, $fallback-ext: 'png') {
+    background-image: url('#{$path}.#{$fallback-ext}');
+    .webp & {
+        background-image: url('#{$path}.webp');
+    }
+  }

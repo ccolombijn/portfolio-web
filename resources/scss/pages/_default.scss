@@ -1,8 +1,30 @@
+@use '../mixins/backgrounds';
 body {
     @apply text-[#6A6766];
     overflow-x: hidden;
 }
 
+// main {
+//     @apply container grid grid-cols-12;
+//     &:has(aside){
+//         section {
+//             @apply col-span-9;
+//         }
+//         aside {
+//             @apply col-span-3;
+//         }
+//     }
+//     &:not(:has(aside)){
+//         section {
+//             @apply col-span-12;
+//         }
+//     }
+// }
+
+section {
+    @apply bg-size-[50%];
+    //@include backgrounds.background-image-webp('/resources/images/dots01', 'png');
+}
 h1 {
     @apply text-4xl;
 }

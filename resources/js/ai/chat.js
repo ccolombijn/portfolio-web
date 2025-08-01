@@ -5,9 +5,19 @@ export function aiChat() {
     const sendPromptBtn = document.getElementById('user-input-btn');
     sendPromptBtn.addEventListener('click',sendPrompt);
 }
+/**
+ * 
+ * @param {*} input 
+ * @param {*} role 
+ */
 function displayMessage(input,role) {
 
 }
+/**
+ * 
+ * @param {*} role 
+ * @returns 
+ */
 function createMessageElement(role){
     const element = document.createElement('div');
     const chat = document.getElementById('chat');
@@ -15,11 +25,15 @@ function createMessageElement(role){
     chat.append(element);
     return element;
 }
+/**
+ * 
+ * @returns 
+ */
 async function sendPrompt() {
     const userInput = document.getElementById('user-input').value;
     if (!userInput) return;
     chatHistory.push({ role: 'user', text: userInput });
-    // Display user message in the UI (implementation not shown)
+    // Display user message in the UI
     displayMessage(userInput, 'user'); 
     const requestBody = {
         prompt: userInput,

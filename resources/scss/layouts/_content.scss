@@ -1,5 +1,6 @@
+@use '../mixins/backgrounds';
 .content {
-    @apply bg-[url(/images/dots01.png)] bg-size-[50%];
+    
     
     &__container {
         @apply container p-8 sm:p-16;
@@ -7,21 +8,23 @@
     .click-me{
         @apply cursor-pointer hover:underline;
     }
-    #ai-explanation {
-        @apply bg-[url(/images/sparkle.png)] bg-no-repeat;
-        background-position-y: 16px;
-        background-position-x: 4px;
-        &:not(:empty) {
-            @apply min-h-[35px] bg-[#cccccc6b] p-4 pl-10 rounded-md;
-        }
-        img {
-            float: left;
-        }
-        span {
-            @apply animate-pulse;
-        }
-        p{
-            @apply p-0;
-        }
+    
+}
+#ai-explanation, #ai-summarize {
+    @apply bg-no-repeat;
+    //@include backgrounds.background-image-webp('/resources/images/sparkle', 'png');
+    background-position-y: 16px;
+    background-position-x: 4px;
+    &:not(:empty) {
+        @apply min-h-[35px] bg-[#cccccc6b] p-4 pl-10 rounded-md;
+    }
+    img {
+        float: left;
+    }
+    span {
+        @apply animate-pulse;
+    }
+    p{
+        @apply p-0;
     }
 }

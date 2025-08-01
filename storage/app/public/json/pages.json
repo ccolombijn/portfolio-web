@@ -3,7 +3,13 @@
         "name" : "home",
         "title" : "Home",
         "route" : "/",
-        "exclude_nav" : true
+        "exclude_nav" : true,
+        "parts" : [
+            "header",
+            "content",
+            "cta",
+            "footer"
+        ]
     },
     {
         "name" : "about",

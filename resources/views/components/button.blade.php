@@ -1,1 +1,1 @@
-<a href="{{$link}}" class="btn btn--{{isset($type) ? $type : 'primary' }}">{{$text}}</a>
+<a href="{{$link}}" class="btn btn--{{isset($type) ? $type : 'primary' }}" aria-label="{{ isset($label) ? $label : $text }}">{{$text}}</a>

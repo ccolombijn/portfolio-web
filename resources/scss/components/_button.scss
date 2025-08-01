@@ -1,11 +1,11 @@
 .btn {
     @apply inline-flex p-4 mt-4 text-center min-w-[250px] rounded-xl justify-center ml-4 
-    backdrop-blur-xs hover:bg-[#ffffff70] hover:text-slate-900 hover:mix-blend-screen hover:border-none font-medium;
+    backdrop-blur-xs hover:bg-[#ffffff70] hover:text-slate-900 hover:mix-blend-screen hover:border-none font-medium shadow-sm;
     i {
         @apply pt-[5px] pr-[5px];
     }
     &--primary {
-        @apply bg-gray-500 text-white;
+        @apply bg-[#66666670] text-white;
     }
     &--white {
         @apply bg-gradient-to-b from-white to-[#ffffff70] text-slate-900 mix-blend-screen;

@@ -1,35 +1,73 @@
 import { createNoise3D } from 'simplex-noise';
-export const headerBackgroundEffects = () => {
+type Noise3D = (x: number, y: number, z: number) => number;
+interface RGBColor {
+    r: number;
+    g: number;
+    b: number;
+}
+
+interface Particle {
+    x: number;
+    y: number;
+    radius: number;
+    opacity: number;
+    color_choice: 1 | 2;
+    noise_offset_x: number;
+    noise_offset_y: number;
+    vx: number;
+    vy: number;
+    blur: number;
+}
+
+interface MousePosition {
+    x: number | null;
+    y: number | null;
+}
+
+interface ColorState {
+    c1: RGBColor;
+    c2: RGBColor;
+    t1: RGBColor;
+    t2: RGBColor;
+}
+
+export const headerBackgroundEffects = (): void => {
     document.addEventListener('DOMContentLoaded', () => {
 
-        const noise3D = createNoise3D(Math.random);
+        const noise3D: Noise3D = createNoise3D(Math.random);
 
-        const canvas = document.getElementById('dot-particles-canvas');
-        const gradientBg = document.querySelector('.animated-gradient-bg');
+        const canvas = document.getElementById('dot-particles-canvas') as HTMLCanvasElement;
+        const gradientBg = document.querySelector('.animated-gradient-bg') as HTMLElement;
+        
         if (!canvas || !gradientBg) {
             console.error("Een van de benodigde elementen (.animated-gradient-bg of #dot-particles-canvas) is niet gevonden.");
             return;
         }
 
         const ctx = canvas.getContext('2d');
-        let time = 0;
-        let particles = [];
-        const mouse = { x: null, y: null };
+        if (!ctx) {
+            console.error("Kon de 2D-context van het canvas niet verkrijgen.");
+            return;
+        }
+
+        let time: number = 0;
+        let particles: Particle[] = [];
+        const mouse: MousePosition = { x: null, y: null };
 
         // --- CUSTOMIZATION ---
-        const PARTICLE_COUNT = 200;
-        const PARTICLE_SPEED = 0.2;
-        const NOISE_SCALE = 1000;
-        const MAX_RADIUS = 1.5;
-        const BLUR_MULTIPLIER = 4.0;
-        const COLOR_TRANSITION_SPEED = 0.005;
-        const INTERACTION_RADIUS = 200;
-        const ATTRACTION_FORCE = 0.002;
-        const ORBITAL_FORCE = 0.05;
-        const LERP_SPEED = 0.05;
+        const PARTICLE_COUNT: number = 200;
+        const PARTICLE_SPEED: number = 0.2;
+        const NOISE_SCALE: number = 1000;
+        const MAX_RADIUS: number = 1.5;
+        const BLUR_MULTIPLIER: number = 4.0;
+        const COLOR_TRANSITION_SPEED: number = 0.005;
+        const INTERACTION_RADIUS: number = 200;
+        const ATTRACTION_FORCE: number = 0.002;
+        const ORBITAL_FORCE: number = 0.05;
+        const LERP_SPEED: number = 0.05;
         // -------------------
 
-        function generateCompatibleColorPair() {
+        function generateCompatibleColorPair(): [RGBColor, RGBColor] {
             const h = Math.random();
             const s = 0.5 + Math.random() * 0.2;
             const l = 0.45 + Math.random() * 0.1;
@@ -38,13 +76,13 @@ export const headerBackgroundEffects = () => {
             const color2 = hslToRgb(secondHue, s, l);
             return [color1, color2];
         }
-        
-        function hslToRgb(h, s, l) {
-            let r, g, b;
-            if (s == 0) {
+
+        function hslToRgb(h: number, s: number, l: number): RGBColor {
+            let r: number, g: number, b: number;
+            if (s === 0) {
                 r = g = b = l;
             } else {
-                const hue2rgb = (p, q, t) => {
+                const hue2rgb = (p: number, q: number, t: number): number => {
                     if (t < 0) t += 1;
                     if (t > 1) t -= 1;
                     if (t < 1 / 6) return p + (q - p) * 6 * t;
@@ -62,18 +100,18 @@ export const headerBackgroundEffects = () => {
         }
     
         const initialColors = generateCompatibleColorPair();
-        let colorState = {
+        let colorState: ColorState = {
             c1: initialColors[0],
             c2: initialColors[1],
             t1: generateCompatibleColorPair()[0],
             t2: generateCompatibleColorPair()[1]
         };
 
-        function lerp(start, end, amount) {
+        function lerp(start: number, end: number, amount: number): number {
             return start + (end - start) * amount;
         }
 
-        function setupParticles() {
+        function setupParticles(): void {
             particles = [];
             for (let i = 0; i < PARTICLE_COUNT; i++) {
                 const radius = Math.random() * MAX_RADIUS + 0.3;
@@ -91,14 +129,14 @@ export const headerBackgroundEffects = () => {
                 });
             }
         }
-    
-        function resizeCanvas() {
+
+        function resizeCanvas(): void {
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
             setupParticles();
         }
-    
-        function animate() {
+
+        function animate(): void {
             // Color animation
             colorState.c1.r = lerp(colorState.c1.r, colorState.t1.r, COLOR_TRANSITION_SPEED);
             colorState.c1.g = lerp(colorState.c1.g, colorState.t1.g, COLOR_TRANSITION_SPEED);
@@ -123,7 +161,7 @@ export const headerBackgroundEffects = () => {
                 let target_vx = Math.cos(angle) * PARTICLE_SPEED;
                 let target_vy = Math.sin(angle) * PARTICLE_SPEED;
 
-                if (mouse.x !== null) {
+                if (mouse.x !== null && mouse.y !== null) {
                     const dx = p.x - mouse.x;
                     const dy = p.y - mouse.y;
                     const distance = Math.sqrt(dx * dx + dy * dy);
@@ -163,8 +201,7 @@ export const headerBackgroundEffects = () => {
             requestAnimationFrame(animate);
         }
 
-        // Event Listeners for the mouse
-        window.addEventListener('mousemove', (event) => {
+        window.addEventListener('mousemove', (event: MouseEvent) => {
             mouse.x = event.clientX;
             mouse.y = event.clientY;
         });

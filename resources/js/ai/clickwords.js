@@ -1,4 +1,4 @@
-import { fetchStream } from "./fetchStream";
+import { fetchStream } from "../fetchStream";
 export function aiClickwords() {
     /**
      * AI Clickwords
@@ -10,7 +10,7 @@ export function aiClickwords() {
             explanationElement.innerHTML = '<img src="/images/loading.gif" width="35" /> <span>Wachten..</span>';
             fetchStream({
                 prompt : 'explanation',
-                word : textContent,
+                input : textContent,
                 stream : true
             },'/ai-generate',explanationElement);
         });

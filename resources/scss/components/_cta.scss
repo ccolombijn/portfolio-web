@@ -1,0 +1,11 @@
+.cta {
+    &__container {
+        @apply grid grid-cols-12 bg-[#cccccc60] rounded-xl p-12 m-8 sm:m-16;
+    }
+    &__image {
+        @apply col-span-3;
+    }
+    &__text {
+        @apply col-span-9;
+    }
+}

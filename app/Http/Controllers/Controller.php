@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Vite;
 use League\CommonMark\Environment\Environment;
 use League\CommonMark\Extension\CommonMark\CommonMarkCoreExtension;
 use League\CommonMark\MarkdownConverter;
@@ -98,8 +99,15 @@ abstract class Controller
             }
             $output = File::get($filePath);
         }       
-
-        $contentWithComponents = $this->insertComponents($output);
+        $pattern = '/!\[(.*?)\]\(\/images\/(.*?)\)/';
+        // $output = preg_replace_callback($pattern, function ($matches) {
+        //     $altText = $matches[1];
+        //     $filename = $matches[2];
+        //     $viteUrl = Vite::asset('resources/images/' . $filename);
+            
+        //     return "![{$altText}]({$viteUrl})";
+        // }, $output);
+        $output = $this->insertComponents($output);
 
         $environment = new Environment([
             'html_input' => 'allow',
@@ -107,8 +115,34 @@ abstract class Controller
         ]);
         $environment->addExtension(new CommonMarkCoreExtension());
         $converter = new MarkdownConverter($environment);
-        
-        return $converter->convert($contentWithComponents);
+        $output = $converter->convert($output);
+        $output = $this->processImagePathsInHtml($output);
+        return $output;
+    }
+    /**
+     * Replaces image paths in Html with Vite resource asset paths
+     */
+    function processImagePathsInHtml(string $htmlContent): string 
+    {
+        $pattern = '/<img src="\/images\/(.*?)"(.*?)>/';
+
+        return preg_replace_callback($pattern, function ($matches) {
+            $filename = $matches[1];
+            $otherAttributes = $matches[2];
+            $viteUrl = Vite::asset('resources/images/' . $filename);
+            $physicalPath = resource_path('images/' . $filename);
+            $dimensions = '';
+            if (file_exists($physicalPath)) {
+                $imageSize = getimagesize($physicalPath);
+                if ($imageSize) {
+                    $width = $imageSize[0];
+                    $height = $imageSize[1];
+                    $dimensions = " width=\"{$width}\" height=\"{$height}\"";
+                }
+            }
+
+            return '<img src="' . $viteUrl . '"' . $dimensions . $otherAttributes . '>';
+        }, $htmlContent);
     }
 
     /**

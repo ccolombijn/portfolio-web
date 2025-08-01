@@ -1,10 +1,13 @@
+@use '../mixins/backgrounds';
 .footer {
-    @apply bg-stone-200 py-12 bg-[url(/images/dots01.png)] bg-contain;
+    @apply bg-stone-200 py-12 bg-contain;
+    //@include backgrounds.background-image-webp('/resources/images/dots01', 'png');
     a {
         @apply text-neutral-500;
     }
     &__brand {
-        @apply inline-block bg-[url(/images/ccc_logo_grey.png)] bg-contain bg-center h-[80px] w-[100px] bg-no-repeat;
+        @apply inline-block bg-contain bg-center h-[80px] w-[100px] bg-no-repeat;
+        //@include backgrounds.background-image-webp('/resources/images/ccc_logo_grey', 'png');
         span {
             @apply hidden;
         }
