@@ -22,12 +22,11 @@
     </script>
 
     @php
-        // 1. Get the correct, hashed URL for the ORIGINAL .png image
+        
+        
         $cloudsPngUrl = Vite::asset('resources/images/CLOUDS.png');
-        // 2. Create the .webp URL by simply replacing the extension
         $cloudsWebpUrl = str_replace('.png', '.webp', $cloudsPngUrl);
 
-        // -- Repeat for all other background images --
         $sparklePngUrl = Vite::asset('resources/images/sparkle.png');
         $sparkleWebpUrl = str_replace('.png', '.webp', $sparklePngUrl);
 
@@ -43,19 +42,31 @@
 
     <style>
         /* Fallback for browsers WITHOUT WebP support */
-        .header-background { background-image: url('{{ $cloudsPngUrl }}'); }
+        .animated-clouds { background-image: url('{{ $cloudsPngUrl }}'); }
         .sparkle-element { background-image: url('{{ $sparklePngUrl }}'); }
-        .dots-element { background-image: url('{{ $dotsPngUrl }}'); }
+        section { background-image: url('{{ $dotsPngUrl }}'); }
         .header__title a { background-image: url('{{ $logoWitPngUrl }}'); }
         .footer__brand { background-image: url('{{ $logoGreyPngUrl }}'); }
 
 
         /* Version for browsers WITH WebP support */
-        html.webp .header-background { background-image: url('{{ $cloudsWebpUrl }}'); }
+        html.webp .animated-clouds { background-image: url('{{ $cloudsWebpUrl }}'); }
         html.webp .sparkle-element { background-image: url('{{ $sparkleWebpUrl }}'); }
-        html.webp .dots-element { background-image: url('{{ $dotsWebpUrl }}'); }
+        html.webp section { background-image: url('{{ $dotsWebpUrl }}'); }
         html.webp .header__title a { background-image: url('{{ $logoWitWebpUrl }}'); }
         html.webp .footer__brand { background-image: url('{{ $logoGreyWebpUrl }}'); }
+
+        /* @php
+        foreach(scandir(resource_path('images')) as $file) {
+            if(str_contains($file,'.png')) {
+                $png = Vite::asset('resources/images/' . $file);
+                $webp = str_replace('.png', '.webp', $png);
+                echo '.bg-' . str_replace('.png','',$file) . ' { background-image: url(' . $png . '); }' . "\n";
+                echo 'html.webp .bg-' . str_replace('.png','',$file) . ' { background-image: url(' . $webp . '); }' . "\n"; 
+            }
+        }
+        @endphp */
+
     </style>
     @vite(['resources/scss/app.scss', 'resources/ts/app.ts'])
     @stack('scripts')
