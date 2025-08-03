@@ -1,5 +1,11 @@
 import { marked } from 'marked';
-
+/**
+ * Implements fetch stream reader and text decoder
+ * @param request 
+ * @param endpoint 
+ * @param target 
+ * @returns {Promise<void>}
+ */
 export async function fetchStream(
     request: Record<string, any>, // Generic request body object
     endpoint: string,

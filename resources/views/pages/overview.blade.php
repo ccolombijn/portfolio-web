@@ -11,7 +11,11 @@
                 <a href="{{ route($route, [$key => $item['slug']]) }}" class="{{ $name }}__card" aria-label="Bekijk {{ $item['title'] }}">
                     
                         @if(isset($item['image_url']))
-                            @include("components.image",[ 'url' => $item['image_url']])
+                            @include("components.image",[ 
+                                'src' => $item['image_url'],
+                                'source' => "storage",
+                                'alt' => $item['title']
+                            ])
                         @endif
                     
                     <h3>{{ $item['title'] }}</h3>

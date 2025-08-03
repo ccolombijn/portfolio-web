@@ -1,5 +1,9 @@
 import { fetchStream } from "../fetchStream";
 import loadingGifUrl from '../../images/loading.gif';
+/**
+ * Sends textContent of elements with .click-me with fetchStream to backend
+ * @returns {void}
+ */
 export function aiClickwords(): void {
 
     const explanationElement = document.querySelector('#ai-explanation') as HTMLElement | null;

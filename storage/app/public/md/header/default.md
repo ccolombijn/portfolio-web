@@ -1,7 +1,7 @@
 ## Creativiteit en code samengebracht
 
-Ik ben Christoffel en vormgeving en development is mijn passie. 
-Op deze website probeer ik je een inkijkje te geven in het werk wat ik doe.
+Ik ben Christoffel, vormgeving en development is mijn passie. 
+Op deze website probeer ik je daar een inkijkje te geven door het werk te laten zien wat ik doe.
 
-{button type=white text='Over mij' link=/about}
-{button type=outline-white text='Bekijk Portfolio' link=/portfolio}
+{button type=white text='Over mij' route=about}
+{button type=outline-white text='Bekijk Portfolio' route=portfolio.index}

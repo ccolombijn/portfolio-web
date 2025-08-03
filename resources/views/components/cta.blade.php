@@ -2,9 +2,7 @@
     <div class="cta__container">
         <div class="cta__image">
             @if(isset($image_url))
-            <picture class="cta__picture">
-                <img src="{{$image_url}}" />
-            </picture>
+                @include('components.image',['src' => $image_url])
             @endif
         </div>
         <div class="cta__text">

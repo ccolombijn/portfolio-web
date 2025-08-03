@@ -4,13 +4,15 @@
         "title" : "PRICO Jobcoacing",
         "slug" : "prico-jobcoacing",
         "intro" : "PRICO intro",
-        "image_url" : "/images/projects/prico_web.png"
+        "image_url" : "/images/projects/prico_web.png",
+        "source" : "storage"
     },
     {
         "name" : "padel-connect",
         "title" : "Padel Connect",
         "slug" : "padel-connect",
         "intro" : "Padel intro",
-        "image_url" : "/images/projects/padelconnect_web.png"
+        "image_url" : "/images/projects/padelconnect_web.png",
+        "source" : "storage"
     }
 ]

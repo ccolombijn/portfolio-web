@@ -2,6 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Illuminate\Foundation\Validation\ValidatesRequests;
+use Illuminate\Routing\Controller as BaseController;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Vite;
@@ -11,8 +14,10 @@ use League\CommonMark\MarkdownConverter;
 use Pug\Pug;
 use Pug\Filter\Markdown as MarkdownFilter; 
 
-abstract class Controller
+abstract class Controller extends BaseController
 {
+    use AuthorizesRequests, ValidatesRequests;
+
     /**
      * @var array
      */

@@ -14,14 +14,18 @@ class PageController extends Controller
          $contentData = [];
          $parts = isset($page['parts']) ? $page['parts'] : $this->parts;
          foreach ($parts as $part) { 
-            $pageContent = $this->getPugMarkdownHTML($part, $page); // get .md or .pug content for part
-            //if(!empty($pageContent)) 
+
+            $pageContent = $this->getPugMarkdownHTML($part, $page); // md/pug part content 
             $contentData[$part] = $pageContent;
-            $viewData = $this->content[$part] ?? [];
+
+            if(isset($page[$part])) {
+                $viewData = $page[$part]; // component data in page 
+            } else {
+                $viewData = $this->content[$part] ?? []; // global
+            }
             $partComponent = 'components.' . $part;
             if(view()->exists($partComponent)) {
                 $contentData[$part] = view($partComponent, $viewData)->render(); // Add part as rendered view
-                //dd($contentData[$part] = view($partComponent, $viewData)->render()); 
             }
                 
          }
@@ -31,8 +35,9 @@ class PageController extends Controller
              'parts' => $parts,
              'content' => $contentData,
          ];
-         //dd($data);
+
          return view('pages.default', $data);
+
     }
 
 }

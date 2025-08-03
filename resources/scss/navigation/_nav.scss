@@ -16,7 +16,7 @@
 .open {
     
     .nav {
-        @apply block animate-[fadeIn_1s_ease-in_1] backdrop-blur-xs flex-none bg-[#00000099] absolute top-0 left-0 w-full text-center h-[100vh] py-[35vh];
+        @apply block backdrop-blur-xs flex-none bg-[#00000099] absolute top-0 left-0 w-full text-center h-[100vh] py-[35vh];
         &-mobile {
             &-open {
                 @apply hidden;

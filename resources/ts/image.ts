@@ -1,4 +1,8 @@
-export const image = () => {
+/**
+ * Detects webp compatibility
+ * @returns {void}
+ */
+export const image = (): void => {
     const img = new Image();
     img.onload = function() {
         document.documentElement.classList.add('webp');

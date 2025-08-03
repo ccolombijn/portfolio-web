@@ -7,7 +7,10 @@
                 <h2>{{$title}}</h2>
             @endif
             @if(isset($image_url))
-                @include("components.image",[ 'url' => $image_url])
+                @include("components.image",[ 
+                    'src' => $image_url,
+                    'source' => isset($source) ? $source : 'resources'
+                ])
             @endif
             {!! $header !!}
         </div>

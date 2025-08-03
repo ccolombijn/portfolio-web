@@ -1,5 +1,7 @@
 import { createNoise3D } from 'simplex-noise';
+
 type Noise3D = (x: number, y: number, z: number) => number;
+
 interface RGBColor {
     r: number;
     g: number;
@@ -31,6 +33,14 @@ interface ColorState {
     t2: RGBColor;
 }
 
+type QualityTier = {
+    count: number;
+    blurMultiplier: number;
+};
+
+/**
+ * 
+ */
 export const headerBackgroundEffects = (): void => {
     document.addEventListener('DOMContentLoaded', () => {
 
@@ -40,33 +50,46 @@ export const headerBackgroundEffects = (): void => {
         const gradientBg = document.querySelector('.animated-gradient-bg') as HTMLElement;
         
         if (!canvas || !gradientBg) {
-            console.error("Een van de benodigde elementen (.animated-gradient-bg of #dot-particles-canvas) is niet gevonden.");
+            console.warn("headerBackgroundEffects: One of the required elements (.animated-gradient-bg or #dot-particles-canvas) not found. Aborting.");
             return;
         }
 
         const ctx = canvas.getContext('2d');
         if (!ctx) {
-            console.error("Kon de 2D-context van het canvas niet verkrijgen.");
+            console.error('headerBackgroundEffects: Could not acquire 2d context of canvas. Aborting.');
             return;
         }
+
+        // --- Adaptive Performance Setup ---
+        const qualityTiers: { [key: string]: QualityTier } = {
+            high:   { count: 250, blurMultiplier: 2.0 },
+            medium: { count: 150, blurMultiplier: 1.5 },
+            low:    { count: 75,  blurMultiplier: 0 }
+        };
+        let currentTier: keyof typeof qualityTiers = 'high';
+        let lastTime: number = 0;
+        let frameSamples: number[] = [];
+        let performanceChecked: boolean = false;
+        // --- End Adaptive Performance Setup ---
 
         let time: number = 0;
         let particles: Particle[] = [];
         const mouse: MousePosition = { x: null, y: null };
 
         // --- CUSTOMIZATION ---
-        const PARTICLE_COUNT: number = 200;
         const PARTICLE_SPEED: number = 0.2;
         const NOISE_SCALE: number = 1000;
         const MAX_RADIUS: number = 1.5;
-        const BLUR_MULTIPLIER: number = 4.0;
         const COLOR_TRANSITION_SPEED: number = 0.005;
         const INTERACTION_RADIUS: number = 200;
         const ATTRACTION_FORCE: number = 0.002;
         const ORBITAL_FORCE: number = 0.05;
         const LERP_SPEED: number = 0.05;
         // -------------------
-
+        /**
+         * 
+         * @returns {array}
+         */
         function generateCompatibleColorPair(): [RGBColor, RGBColor] {
             const h = Math.random();
             const s = 0.5 + Math.random() * 0.2;
@@ -76,7 +99,13 @@ export const headerBackgroundEffects = (): void => {
             const color2 = hslToRgb(secondHue, s, l);
             return [color1, color2];
         }
-
+        /**
+         * 
+         * @param h 
+         * @param s 
+         * @param l 
+         * @returns {object}
+         */
         function hslToRgb(h: number, s: number, l: number): RGBColor {
             let r: number, g: number, b: number;
             if (s === 0) {
@@ -106,14 +135,23 @@ export const headerBackgroundEffects = (): void => {
             t1: generateCompatibleColorPair()[0],
             t2: generateCompatibleColorPair()[1]
         };
-
+        /**
+         * 
+         * @param start 
+         * @param end 
+         * @param amount 
+         * @returns {number}
+         */
         function lerp(start: number, end: number, amount: number): number {
             return start + (end - start) * amount;
         }
-
+        /**
+         * @returns {void}
+         */
         function setupParticles(): void {
             particles = [];
-            for (let i = 0; i < PARTICLE_COUNT; i++) {
+            const settings = qualityTiers[currentTier]; // Use settings from the current tier
+            for (let i = 0; i < settings.count; i++) {
                 const radius = Math.random() * MAX_RADIUS + 0.3;
                 particles.push({
                     x: Math.random() * window.innerWidth,
@@ -125,18 +163,55 @@ export const headerBackgroundEffects = (): void => {
                     noise_offset_y: Math.random() * NOISE_SCALE,
                     vx: 0,
                     vy: 0,
-                    blur: radius * BLUR_MULTIPLIER
+                    blur: radius * settings.blurMultiplier
                 });
             }
         }
-
+        /**
+         * @returns {void}
+         */
         function resizeCanvas(): void {
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
             setupParticles();
         }
+        /**
+         * 
+         * @returns {void}
+         */
+        function checkAndAdaptPerformance(): void {
+            if (performanceChecked || frameSamples.length < 120) return;
+            performanceChecked = true;
+            const averageDelta = frameSamples.reduce((a, b) => a + b, 0) / frameSamples.length;
+            const averageFPS = 1000 / averageDelta;
+            console.log(`ℹ️ Performance benchmark: Average FPS is ${averageFPS.toFixed(1)}`);
 
-        function animate(): void {
+            if (averageFPS < 45 && currentTier === 'high') {
+                console.warn("Performance is low. Downgrading to Medium quality.");
+                currentTier = 'medium';
+                resizeCanvas();
+            } else if (averageFPS < 30 && currentTier === 'medium') {
+                console.warn("Performance is still low. Downgrading to Low quality.");
+                currentTier = 'low';
+                resizeCanvas();
+            }
+        }
+        /**
+         * 
+         * @param currentTime 
+         * @returns {void}
+         */
+        function animate(currentTime: number): void {
+            // Performance measurement for the first few seconds
+            if (!performanceChecked) {
+                const deltaTime = currentTime - lastTime;
+                lastTime = currentTime;
+                if (deltaTime > 0 && deltaTime < 100) { // Ignore large gaps
+                    frameSamples.push(deltaTime);
+                    if (frameSamples.length > 120) frameSamples.shift();
+                }
+            }
+
             // Color animation
             colorState.c1.r = lerp(colorState.c1.r, colorState.t1.r, COLOR_TRANSITION_SPEED);
             colorState.c1.g = lerp(colorState.c1.g, colorState.t1.g, COLOR_TRANSITION_SPEED);
@@ -146,13 +221,13 @@ export const headerBackgroundEffects = (): void => {
             colorState.c2.b = lerp(colorState.c2.b, colorState.t2.b, COLOR_TRANSITION_SPEED);
             gradientBg.style.setProperty('--color1', `rgb(${colorState.c1.r}, ${colorState.c1.g}, ${colorState.c1.b})`);
             gradientBg.style.setProperty('--color2', `rgb(${colorState.c2.r}, ${colorState.c2.g}, ${colorState.c2.b})`);
-            
+
             if (Math.abs(colorState.c1.r - colorState.t1.r) < 1) {
                 const newPair = generateCompatibleColorPair();
                 colorState.t1 = newPair[0];
                 colorState.t2 = newPair[1];
             }
-    
+
             // Particle animation
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             particles.forEach(p => {
@@ -164,8 +239,10 @@ export const headerBackgroundEffects = (): void => {
                 if (mouse.x !== null && mouse.y !== null) {
                     const dx = p.x - mouse.x;
                     const dy = p.y - mouse.y;
-                    const distance = Math.sqrt(dx * dx + dy * dy);
-                    if (distance < INTERACTION_RADIUS) {
+                    const distanceSq = dx * dx + dy * dy;
+
+                    if (distanceSq < INTERACTION_RADIUS * INTERACTION_RADIUS) {
+                        const distance = Math.sqrt(distanceSq);
                         target_vx -= dx * ATTRACTION_FORCE;
                         target_vy -= dy * ATTRACTION_FORCE;
                         target_vx += dy * ORBITAL_FORCE * (1 - distance / INTERACTION_RADIUS);
@@ -186,15 +263,19 @@ export const headerBackgroundEffects = (): void => {
                 const color = p.color_choice === 1 ? colorState.c1 : colorState.c2;
                 const colorString = `rgb(${Math.floor(color.r)}, ${Math.floor(color.g)}, ${Math.floor(color.b)})`;
 
-                ctx.shadowBlur = p.blur;
-                ctx.shadowColor = colorString;
+                if (p.blur > 0.1) {
+                    ctx.shadowBlur = p.blur;
+                    ctx.shadowColor = colorString;
+                }
 
                 ctx.beginPath();
                 ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
                 ctx.fillStyle = `rgba(${Math.floor(color.r)}, ${Math.floor(color.g)}, ${Math.floor(color.b)}, ${p.opacity})`;
                 ctx.fill();
 
-                ctx.shadowBlur = 0;
+                if (p.blur > 0.1) {
+                    ctx.shadowBlur = 0;
+                }
             });
             
             time += 0.001;
@@ -205,6 +286,7 @@ export const headerBackgroundEffects = (): void => {
             mouse.x = event.clientX;
             mouse.y = event.clientY;
         });
+
         canvas.addEventListener('mouseleave', () => {
             mouse.x = null;
             mouse.y = null;
@@ -212,6 +294,7 @@ export const headerBackgroundEffects = (): void => {
 
         window.addEventListener('resize', resizeCanvas);
         resizeCanvas();
-        animate();
+        animate(0); // Start the animation loop
+        setTimeout(checkAndAdaptPerformance, 3000);
     });
 }

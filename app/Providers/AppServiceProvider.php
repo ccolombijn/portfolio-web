@@ -2,6 +2,8 @@
 
 namespace App\Providers;
 
+use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\PageController as AdminPageController;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\View;
@@ -69,12 +71,24 @@ class AppServiceProvider extends ServiceProvider
             PageController::class,
             PortfolioController::class,
             ContactController::class,
-            GeminiController::class
+            GeminiController::class,
+            DashboardController::class,
+            AdminPageController::class
         ])
             ->needs('$content')
             ->give($contentData);
-        $this->app->when(PortfolioController::class)
+        $this->app->when([
+            PortfolioController::class,
+            DashboardController::class,
+            AdminPageController::class
+        ])
             ->needs('$projects')
             ->give($this->app->make('projects.data'));
+        $this->app->when([
+            DashboardController::class,
+            AdminPageController::class
+        ])
+            ->needs('$pages')
+            ->give($pagesData);
     }
 }

@@ -17,7 +17,8 @@
                 'name' => 'text',
                 'email' => 'email',
                 'message' => 'textarea'
-            ]
+            ],
+            'button' => 'Verstuur'
         ])
     </div>
 </section>

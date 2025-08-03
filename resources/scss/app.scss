@@ -1,5 +1,6 @@
 @use 'tailwindcss';
-@use 'mixins/backgrounds';
+//@use 'mixins/backgrounds';
+@use 'generated';
 @use 'components';
 @use 'layouts';
 @use 'navigation';

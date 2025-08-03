@@ -3,7 +3,7 @@
     "cta" : {
         "title" : "Neem contact met me op",
         "text" : "Geinteresseerd? Ik ga graag met je in gespek over wat we voor elkaar kunnen betekenen.",
-        "image_url" : "/images/cc_finished.png",
+        "image_url" : "images/cc_finished.png",
         "link1" : "contact.show",
         "link1_text" : "Stuur me een bericht",
         "link2" : "about",

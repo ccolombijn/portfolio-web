@@ -1,3 +1,7 @@
+/**
+ * Adds textContent of <label> elements as placeholder
+ * @returns {void}
+ */
 export function form(): void {
     const form = document.querySelector('form.form');
     if (form) {

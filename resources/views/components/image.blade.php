@@ -1,19 +1,48 @@
+@props([
+    'src',
+    'alt' => '',
+    'source' => 'resources',
+    'lazy' => true,
+])
+
 @php
-$webp = Vite::asset('resources/' . str_replace('.png','.webp',$url));
-$png = Vite::asset('resources/' . $url );
-$path = resource_path($url);
-$dimensions = '';
-if (file_exists($path)) {
-    $size = getimagesize($path);
-    if ($size) {
-        $width = $size[0];
-        $height = $size[1];
-        $dimensions = " width=\"{$width}\" height=\"{$height}\"";
+    $fallbackUrl = '';
+    $webpUrl = '';
+    $dimensions = '';
+    $mimeType = 'image/png';
+    // resources
+    if ($source === 'resources') {
+        $fullResourcePath = 'resources/' . ltrim($src, '/');
+        $physicalPath = resource_path(ltrim($src, '/'));
+        
+        $fallbackUrl = Vite::asset($fullResourcePath);
+    
+    // storage
+    } elseif ($source === 'storage') {
+        $pathInStorage = ltrim($src, '/');
+        $physicalPath = storage_path('app/public/' . $pathInStorage);
+        
+        $fallbackUrl = asset('storage/' . $pathInStorage);
     }
-}
+
+    if (!empty($fallbackUrl)) {
+        $webpUrl = preg_replace('/\.(png|jpg|jpeg)$/i', '.webp', $fallbackUrl);
+
+
+        if (isset($physicalPath) && file_exists($physicalPath)) {
+            $imageSize = getimagesize($physicalPath);
+            if ($imageSize) {
+                $dimensions = "width=\"{$imageSize[0]}\" height=\"{$imageSize[1]}\"";
+                $mimeType = $imageSize['mime'];
+            }
+        }
+    }
 @endphp
-<figure>
-    <source srcset="{{ $webp }}" type="image/webp">
-    <source srcset="{{ $png }}" type="image/png">
-    <img src="{{ $png }}" alt="{{ isset($alt) ? $alt : $url }}"{{ $dimensions }}>
-</figure>
+
+@if ($fallbackUrl)
+    <picture>
+        <source srcset="{{ $webpUrl }}" type="image/webp">
+        <source srcset="{{ $fallbackUrl }}" type="{{ $mimeType }}">
+        <img src="{{ $fallbackUrl }}" alt="{{ $alt }}" {!! $dimensions !!} @if($lazy) loading="lazy" @endif>
+    </picture>
+@endif

@@ -1,5 +1,9 @@
 import { fetchStream } from "../fetchStream";
 import loadingGifUrl from '../../images/loading.gif';
+/**
+ * Summarize page with AI
+ * @returns {void}
+ */
 export function aiSummarize(): void {
 
     const contentElement = document.querySelector('.content') as HTMLElement | null;
@@ -8,7 +12,7 @@ export function aiSummarize(): void {
 
     if (!contentElement || !summarizeElement || !summarizeButton) {
         console.warn("ai/summarize : one or more (.content, #ai-summarize, .summarize-btn) not found. Aborted");
-        return; // Stop de functie als een element niet gevonden is
+        return; 
     }
 
     const pageContent = contentElement.textContent?.trim() || '';
