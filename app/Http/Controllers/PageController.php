@@ -21,7 +21,9 @@ class PageController extends Controller
             if(isset($page[$part])) {
                 $viewData = $page[$part]; // component data in page 
             } else {
-                $viewData = $this->content[$part] ?? []; // global
+
+                $viewData = app('content.data')[$part] ?? []; // global
+               
             }
             $partComponent = 'components.' . $part;
             if(view()->exists($partComponent)) {
