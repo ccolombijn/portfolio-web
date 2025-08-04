@@ -34,10 +34,10 @@ abstract class Controller extends BaseController
     ];
     protected $data;
 
-    // public function __construct(array $content)
-    // {
-    //     $this->content = $content; // Get content data 
-    // }
+    public function __construct(array $content)
+    {
+        $this->content = app('content.data'); // Get content data 
+    }
 
     abstract public function show(array $page);
 
@@ -48,11 +48,11 @@ abstract class Controller extends BaseController
     }
 
     /**
-     * 'content.data' singleton.
+     * Get singleton data
      */
-    protected function getSharedContentData(): array
+    public function appData($key): array
     {
-        return app('content.data');
+        return app($key . '.data');
     }
 
     /**
@@ -175,7 +175,7 @@ abstract class Controller extends BaseController
                 $componentName = $match[1];
                 $attributesString = $match[2] ?? '';
 
-                $defaultData = $this->content[$componentName] ?? [];
+                $defaultData = app('content.data')[$componentName] ?? [];
                 $overrides = $this->parseAttributes($attributesString);
                 $componentData = array_merge($defaultData, $overrides);
 
