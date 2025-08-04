@@ -8,14 +8,9 @@ class PortfolioController extends Controller
 
     protected $projects;
 
-    public function __construct(array $projects, array $content)
+    public function __construct(array $projects)
     {
-        parent::__construct($content);
-        // foreach ($projects as &$project) { 
-        //     if (!empty($project['image_url'])) {
-        //         $project['image_url'] = asset('storage' . $project['image_url']);
-        //     }
-        // }
+        //parent::__construct($content);
         $this->projects = $projects;
     }
     public function show(array $page) {}

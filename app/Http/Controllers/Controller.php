@@ -34,10 +34,10 @@ abstract class Controller extends BaseController
     ];
     protected $data;
 
-    public function __construct(array $content)
-    {
-        $this->content = $content; // Get content data 
-    }
+    // public function __construct(array $content)
+    // {
+    //     $this->content = $content; // Get content data 
+    // }
 
     abstract public function show(array $page);
 
@@ -48,7 +48,15 @@ abstract class Controller extends BaseController
     }
 
     /**
-     * Processes content to HTML, supporting Pug-to-HTML and Markdown-to-HTML workflows.
+     * 'content.data' singleton.
+     */
+    protected function getSharedContentData(): array
+    {
+        return app('content.data');
+    }
+
+    /**
+     * Processes content to HTML, supporting Pug-to-HTML and Markdown-to-HTML
      */
     public function getPugMarkdownHTML(string $part, array $page): string
     {

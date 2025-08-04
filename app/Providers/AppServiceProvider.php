@@ -11,6 +11,7 @@ use Illuminate\Support\ServiceProvider;
 use App\Http\Controllers\PageController;
 use App\Http\Controllers\PortfolioController;
 use App\Http\Controllers\ContactController;
+use App\Http\Controllers\Controller;
 use App\Http\Controllers\GeminiController;
 
 class AppServiceProvider extends ServiceProvider
@@ -67,16 +68,21 @@ class AppServiceProvider extends ServiceProvider
             ->needs('$contactData')
             ->give($contactData);
 
-        $this->app->when([
-            PageController::class,
-            PortfolioController::class,
-            ContactController::class,
-            GeminiController::class,
-            DashboardController::class,
-            AdminPageController::class
-        ])
-            ->needs('$content')
-            ->give($contentData);
+        // $this->app->when([
+        //     PageController::class,
+        //     PortfolioController::class,
+        //     ContactController::class,
+        //     GeminiController::class,
+        //     DashboardController::class,
+        //     AdminPageController::class
+        // ])
+        //     ->needs('$content')
+        //     ->give($contentData);
+
+        // $this->app->when(Controller::class)
+        //     ->needs('$content')
+        //     ->give($contentData);
+
         $this->app->when([
             PortfolioController::class,
             DashboardController::class,

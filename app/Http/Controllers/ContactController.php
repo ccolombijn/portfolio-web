@@ -8,10 +8,10 @@ use Illuminate\Support\Facades\Session;
 
 class ContactController extends Controller
 {
-    public function __construct(array $content)
-    {
-        parent::__construct($content);
-    }
+    // public function __construct(array $content)
+    // {
+    //     parent::__construct($content);
+    // }
 
     public function show(array $page) 
     {

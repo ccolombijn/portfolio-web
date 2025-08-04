@@ -11,9 +11,9 @@ class PageController extends Controller
     protected $projects;
     protected $pages;
 
-    public function __construct(array $projects, array $pages, array $content)
+    public function __construct(array $projects, array $pages)
     {
-        parent::__construct($content);
+        //parent::__construct($content);
         $this->projects = $projects;
         $this->pages = $pages;
     }
