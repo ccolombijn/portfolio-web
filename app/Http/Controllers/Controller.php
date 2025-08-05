@@ -34,10 +34,10 @@ abstract class Controller extends BaseController
     ];
     protected $data;
 
-    public function __construct(array $content)
-    {
-        $this->content = app('content.data'); // Get content data 
-    }
+    // public function __construct(array $content)
+    // {
+    //     $this->content = app('content.data'); // Get content data 
+    // }
 
     abstract public function show(array $page);
 
