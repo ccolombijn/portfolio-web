@@ -5,6 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Panel</title>
     @vite(['resources/scss/admin.scss', 'resources/ts/admin.ts'])
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/easymde/dist/easymde.min.css"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/easymde/dist/easymde.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+    
 </head>
 <body class="bg-gray-100">
     <div class="flex">
@@ -34,5 +41,13 @@
             @yield('content')
         </main>
     </div>
+    <script>
+        const editors = document.querySelectorAll('.editor').forEach( editor => {
+            new EasyMDE({
+                element: editor,
+            });
+        });
+
+    </script>
 </body>
 </html>

@@ -5,7 +5,7 @@ use App\Http\Controllers\ContactController;
 use App\Http\Controllers\GeminiController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\PageController as AdminPageController;
-
+use Illuminate\Support\Facades\Auth;
 
 foreach (collect(app('pages.data'))->all() as $page) {
 

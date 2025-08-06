@@ -55,6 +55,37 @@ abstract class Controller extends BaseController
         return app($key . '.data');
     }
 
+    public function getMarkdownPath(string $part, array $page): string 
+    {
+        $possibleMdPaths = [
+            storage_path("app/public/md/{$part}/{$page['name']}.md"),
+            storage_path("app/public/md/{$part}/default.md"),
+            resource_path("md/{$part}/{$page['name']}.md"),
+            resource_path("md/{$part}/default.md"),
+        ];
+
+        $filePath = '';
+        foreach ($possibleMdPaths as $path) {
+            if (File::exists($path)) {
+                $filePath = $path;
+                break; 
+            }
+        }
+        return $filePath;
+
+    }
+
+    public function getMarkdownContent(string $part, array $page): string
+    {
+        $filePath = $this->getMarkdownPath($part, $page);
+
+        if (empty($filePath)) {
+            return '';
+        }
+        $output = File::get($filePath);
+        return $output;
+    }
+
     /**
      * Processes content to HTML, supporting Pug-to-HTML and Markdown-to-HTML
      */
@@ -92,25 +123,26 @@ abstract class Controller extends BaseController
 
         if(!$output){
 
-            $possibleMdPaths = [
-                storage_path("app/public/md/{$part}/{$pageName}.md"),
-                storage_path("app/public/md/{$part}/default.md"),
-                resource_path("md/{$part}/{$pageName}.md"),
-                resource_path("md/{$part}/default.md"),
-            ];
+            // $possibleMdPaths = [
+            //     storage_path("app/public/md/{$part}/{$pageName}.md"),
+            //     storage_path("app/public/md/{$part}/default.md"),
+            //     resource_path("md/{$part}/{$pageName}.md"),
+            //     resource_path("md/{$part}/default.md"),
+            // ];
 
-            $filePath = '';
-            foreach ($possibleMdPaths as $path) {
-                if (File::exists($path)) {
-                    $filePath = $path;
-                    break; 
-                }
-            }
+            // $filePath = '';
+            // foreach ($possibleMdPaths as $path) {
+            //     if (File::exists($path)) {
+            //         $filePath = $path;
+            //         break; 
+            //     }
+            // }
 
-            if (empty($filePath)) {
-                return '';
-            }
-            $output = File::get($filePath);
+            // if (empty($filePath)) {
+            //     return '';
+            // }
+            // $output = File::get($filePath);
+            $output = $this->getMarkdownContent($part, $page);
         }       
         $pattern = '/!\[(.*?)\]\(\/images\/(.*?)\)/';
         // $output = preg_replace_callback($pattern, function ($matches) {
@@ -130,6 +162,7 @@ abstract class Controller extends BaseController
         $converter = new MarkdownConverter($environment);
         $output = $converter->convert($output);
         $output = $this->processImagePathsInHtml($output);
+        //dd($output);
         return $output;
     }
     /**

@@ -21,9 +21,10 @@
                 <tr class="border-b border-stone-300">
                     <td class="p-3">{{ $page['name'] }}</td>
                     <td class="p-3">{{ $page['title'] }}</td>
-                    <td class="p-3">{{ isset($page['route']) ? $page['route'] : '/' . $page['name'] }}</td>
+                    <td class="p-3"><pre>{{ isset($page['route']) ? $page['route'] : '/' . $page['name'] }}</pre></td>
                     <td class="p-3">
-                        <a href="{{ route('admin.pages.edit', $page['name']) }}" class="text-blue-500">Edit</a>
+                        @php $pageLink = isset($page['method']) ? $page['name'] . '.' . $page['method'] : $page['name'] @endphp
+                        <a href="{{ route('admin.pages.edit', $pageLink) }}" class="text-blue-500">Edit</a>
                     </td>
                 </tr>
             @endforeach

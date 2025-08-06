@@ -1,8 +1,6 @@
-@use 'tailwindcss';
-//@use 'admin';
 .flex {
     main {
-        @apply ml-60;
+        @apply ml-20;
     }
     aside {
         @apply fixed;

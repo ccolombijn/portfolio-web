@@ -1,10 +1,10 @@
 [
     {
-        "name" : "home",
-        "title" : "Home",
-        "route" : "/",
-        "exclude_nav" : true,
-        "parts" : [
+        "name": "home",
+        "title": "Home",
+        "route": "/",
+        "exclude_nav": true,
+        "parts": [
             "header",
             "content",
             "cta",
@@ -12,33 +12,33 @@
         ]
     },
     {
-        "name" : "about",
-        "title" : "Over mij"
+        "name": "about",
+        "title": "Over mij"
     },
     {
-        "name" : "skills",
-        "title" : "Vaardigheden"
+        "name": "skills",
+        "title": "Vaardigheden"
     },
     {
-        "name" : "portfolio",
-        "title" : "Portfolio",
-        "route" : "/portfolio",
-        "controller" : "PortfolioController",
-        "method" : "index"
+        "name": "portfolio",
+        "title": "Portfolio",
+        "route": "/portfolio",
+        "controller": "PortfolioController",
+        "method": "index"
     },
     {
-        "name" : "portfolio",
-        "title" : "Portfolio",
-        "route" : "/portfolio/{project}",
-        "controller" : "PortfolioController",
-        "method" : "project",
-        "exclude_nav" : true
+        "name": "portfolio",
+        "title": "Portfolio",
+        "route": "/portfolio/{project}",
+        "controller": "PortfolioController",
+        "method": "project",
+        "exclude_nav": true
     },
     {
-        "name" : "contact",
-        "title" : "Contact",
-        "route" : "/contact",
-        "controller" : "ContactController",
-        "method" : "show"
+        "name": "contact",
+        "title": "Contact",
+        "route": "/contact",
+        "controller": "ContactController",
+        "method": "show"
     }
 ]
