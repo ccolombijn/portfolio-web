@@ -1,18 +1,17 @@
 [
-    { 
-        "name" : "prico-jobcoacing",
-        "title" : "PRICO Jobcoacing",
-        "slug" : "prico-jobcoacing",
-        "intro" : "PRICO intro",
-        "image_url" : "/images/projects/prico_web.png",
-        "source" : "storage"
+    {
+        "name": "prico-jobcoaching",
+        "title": "PRICO Jobcoaching",
+        "source": "storage",
+        "slug": "prico-jobcoaching",
+        "image_url": "/images/projects/prico_web.png"
     },
     {
-        "name" : "padel-connect",
-        "title" : "Padel Connect",
-        "slug" : "padel-connect",
-        "intro" : "Padel intro",
-        "image_url" : "/images/projects/padelconnect_web.png",
-        "source" : "storage"
+        "name": "padel-connect",
+        "title": "Padel Connect",
+        "slug": "padel-connect",
+        "intro": "Padel intro",
+        "image_url": "/images/projects/padelconnect_web.png",
+        "source": "storage"
     }
 ]

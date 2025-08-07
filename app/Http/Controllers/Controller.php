@@ -74,7 +74,9 @@ abstract class Controller extends BaseController
         return $filePath;
 
     }
-
+    /**
+     * 
+     */
     public function getMarkdownContent(string $part, array $page): string
     {
         $filePath = $this->getMarkdownPath($part, $page);

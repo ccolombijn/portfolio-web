@@ -1,7 +1,7 @@
 @use 'sass:math';
 @use '../mixins/backgrounds';
 .header {
-    @apply bg-slate-900 text-white h-screen;
+    @apply bg-linear-to-b from-slate-900 to-sky-800 text-white h-screen;
     &__content {
         @apply text-center py-[10vh] sm:py-[15vh] align-middle font-thin;
         h2 + p {

@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="bg-gray-800 h-screen pt-[25vh]">
+<div class="bg-linear-to-b from-gray-800 to-sky-800 h-screen pt-[25vh]">
     <div class="row justify-content-center">
         <div class="col-md-8">
             <div class="form card relative z-50 bg-white rounded shadow m-auto p-6 my-1/2" style="width:25vw;">

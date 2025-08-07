@@ -3,7 +3,9 @@
 namespace App\Providers;
 
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\FilesController;
 use App\Http\Controllers\Admin\PageController as AdminPageController;
+use App\Http\Controllers\Admin\ProjectController as AdminProjectController;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\View;
@@ -13,6 +15,7 @@ use App\Http\Controllers\PortfolioController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\GeminiController;
+use Illuminate\Support\Facades\Storage;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -86,7 +89,8 @@ class AppServiceProvider extends ServiceProvider
         $this->app->when([
             PortfolioController::class,
             DashboardController::class,
-            AdminPageController::class
+            AdminPageController::class,
+            AdminProjectController::class
         ])
             ->needs('$projects')
             ->give($this->app->make('projects.data'));
@@ -96,5 +100,8 @@ class AppServiceProvider extends ServiceProvider
         ])
             ->needs('$pages')
             ->give($pagesData);
+        $this->app->when(FilesController::class)
+            ->needs('$files')
+            ->give(Storage::disk('public'));
     }
 }

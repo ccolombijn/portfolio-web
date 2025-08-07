@@ -1,5 +1,5 @@
-<section class="intoduction">
-    <div class="introduction__container">
+<section class="section-introduction">
+    <div class="section-introduction__container">
         
     </div>
 </section>

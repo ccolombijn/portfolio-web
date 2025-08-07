@@ -44,7 +44,7 @@
         /* Fallback for browsers WITHOUT WebP support */
         .animated-clouds { background-image: url('{{ $cloudsPngUrl }}'); }
         .sparkle-element { background-image: url('{{ $sparklePngUrl }}'); }
-        section { background-image: url('{{ $dotsPngUrl }}'); }
+        main section { background-image: url('{{ $dotsPngUrl }}'); }
         .header__title a { background-image: url('{{ $logoWitPngUrl }}'); }
         .footer__brand { background-image: url('{{ $logoGreyPngUrl }}'); }
 
@@ -52,7 +52,7 @@
         /* Version for browsers WITH WebP support */
         html.webp .animated-clouds { background-image: url('{{ $cloudsWebpUrl }}'); }
         html.webp .sparkle-element { background-image: url('{{ $sparkleWebpUrl }}'); }
-        html.webp section { background-image: url('{{ $dotsWebpUrl }}'); }
+        html.webp main section { background-image: url('{{ $dotsWebpUrl }}'); }
         html.webp .header__title a { background-image: url('{{ $logoWitWebpUrl }}'); }
         html.webp .footer__brand { background-image: url('{{ $logoGreyWebpUrl }}'); }
 

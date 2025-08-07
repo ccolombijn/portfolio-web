@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Http\Controllers\Controller;
+use App\Http\Controllers\Admin\AdminController as Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\File;
@@ -10,15 +10,13 @@ use Illuminate\Support\Facades\Storage;
 
 class PageController extends Controller
 {
-    protected $projects;
+
     protected $pages;
 
-    public function __construct(array $projects, array $pages)
+    public function __construct(array $pages)
     {
-        $this->projects = $projects;
         $this->pages = $pages;
     }
-    public function show(array $page) {}
     /**
      * 
      */
@@ -54,7 +52,6 @@ class PageController extends Controller
         $pages = $this->getPages();
         return view('admin.pages.index', compact('pages'));
     }
-    
     /**
      * 
      */
@@ -117,7 +114,6 @@ class PageController extends Controller
      */
     public function update(Request $request, $pageName)
     {
-        
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'title' => 'required|string|max:255',
@@ -186,7 +182,7 @@ class PageController extends Controller
         $remainder = array_diff($sections,$parts);
         $sorted = array_merge($selected,$remainder);
 
-        return view('admin.pages.edit',[
+        return view('admin.pages.create',[
             'parts' => $parts,
             'selected_parts' => $selected,
             'sorted_sections' => $sorted,
