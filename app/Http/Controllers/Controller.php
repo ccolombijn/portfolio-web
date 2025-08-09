@@ -198,7 +198,7 @@ abstract class Controller extends BaseController
      */
     private function insertComponents(string $htmlContent): string
     {
-        $pattern = '/{([a-zA-Z0-9_-]+)\s*([^}]*)?}/';
+        $pattern = '/{([a-zA-Z0-9_.-]+)\s*([^}]*)?}/';
         preg_match_all($pattern, $htmlContent, $matches, PREG_SET_ORDER);
 
         if (!empty($matches)) {

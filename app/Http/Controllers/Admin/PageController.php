@@ -6,7 +6,6 @@ use App\Http\Controllers\Admin\AdminController as Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\File;
-use Illuminate\Support\Facades\Storage;
 
 class PageController extends Controller
 {
@@ -23,6 +22,48 @@ class PageController extends Controller
     private function getPages(): array
     {
         return $this->pages;
+    }
+    /**
+     * 
+     */
+    private function getControllers(): array
+    {
+        $controllers = [];
+        $path = app_path('Http/Controllers');
+        foreach(scandir($path) as $item) {
+            if(str_contains($item, '.php')){
+                $controller = str_replace('.php','',$item);
+                if($controller === 'Controller') continue;
+                $cls = new \ReflectionClass('App\Http\\Controllers\\' . $controller);
+                $methods = [];
+                //dd($cls->getMethods());
+                foreach($cls->getMethods() as $method){
+                    if($method->class === 'App\Http\Controllers\\'.$controller){
+                        //if($controller === 'PageController') dd($cls->getMethods());
+                        $returnType = $method->getReturnType();
+                        if ($returnType && $returnType->getName() === 'Illuminate\Contracts\View\View') {
+                            $methods[] = $method->name;
+                        }
+                    }
+                }
+                if(!empty($methods)) $controllers[$controller] = $methods;
+            }
+        }
+        return $controllers;
+    }
+    /**
+     * 
+     */
+    private function getPageViews(): array
+    {
+        $views = [];
+        $path = resource_path('views/pages');
+        foreach(scandir($path) as $file){
+            if(str_contains($file,'php')){
+                $views[] = 'pages.' . str_replace('.blade.php','',$file);
+            }
+        }
+        return $views;
     }
     /**
      * 
@@ -55,7 +96,7 @@ class PageController extends Controller
     /**
      * 
      */
-    private function getPageIndex($pageName)
+    private function getPageIndex($pageName): int
     {
         $pages = $this->getPages();
 
@@ -104,6 +145,8 @@ class PageController extends Controller
             'selected_parts' => $selected,
             'sorted_sections' => $sorted,
             'sections' => $sections,
+            'controllers' => $this->getControllers(),
+            'views' => $this->getPageViews(),
             'header' => $header,
             'content' => $content,
             'footer' => $footer
@@ -112,7 +155,7 @@ class PageController extends Controller
     /**
      * 
      */
-    public function update(Request $request, $pageName)
+    public function update(Request $request, $pageName): \Illuminate\Http\RedirectResponse
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
@@ -164,7 +207,7 @@ class PageController extends Controller
     /**
      * 
      */
-    public function create()
+    public function create(): \Illuminate\Contracts\View\View
     {
         $header = $this->getMarkdownContent('header',['name' => 'default']);
         $content = $this->getMarkdownContent('content',['name' => 'default']);
@@ -186,6 +229,8 @@ class PageController extends Controller
             'parts' => $parts,
             'selected_parts' => $selected,
             'sorted_sections' => $sorted,
+            'controllers' => $this->getControllers(),
+            'views' => $this->getPageViews(),
             'sections' => $sections,
             'header' => $header,
             'content' => $content,
@@ -195,7 +240,7 @@ class PageController extends Controller
     /**
      * 
      */
-    public function store(Request $request)
+    public function store(Request $request): \Illuminate\Http\RedirectResponse
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
@@ -210,6 +255,11 @@ class PageController extends Controller
         ]);
 
         $pages = $this->getPages();
+        if(in_array($validated['name'], array_column($pages,'name'))){
+            return redirect()->back()
+            ->withErrors(['name' => 'This name is already in use. Please choose a different one.'])
+            ->withInput();
+        }
         $page = [];
         $page['name'] = $validated['name'];
         $page['title'] = $validated['title'];
@@ -239,11 +289,12 @@ class PageController extends Controller
     /**
      * 
      */
-    public function destroy(string $pageName): void
+    public function destroy(string $pageName): \Illuminate\Http\RedirectResponse
     {
         $pages = $this->getPages();
         $pageIndex = $this->getPageIndex($pageName);
         unset($pages[$pageIndex]);
         $this->savePages($pages);
+        return redirect()->route('admin.pages.index')->with('success', 'Page removed successfully!');
     }
 }

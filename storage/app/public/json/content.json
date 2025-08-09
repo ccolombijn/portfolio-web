@@ -1,6 +1,6 @@
 {
     "description" : "Portofolio website van Christoffel Colombijn. Hier is een overzicht te vinden van projecten en een omschrijving van mijn vaardigheden.",
-    "cta" : {
+    "sections.cta" : {
         "title" : "Neem contact met me op",
         "text" : "Geinteresseerd? Ik ga graag met je in gespek over wat we voor elkaar kunnen betekenen.",
         "image_url" : "images/cc_finished.png",

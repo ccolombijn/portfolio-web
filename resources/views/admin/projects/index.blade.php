@@ -18,7 +18,7 @@
         </thead>
         <tbody>
             @foreach($projects as $project)
-                <tr class="border-b border-stone-300">
+                <tr class="border-b border-stone-300 cursor-pointer hover:bg-sky-100">
                     <td class="p-3">{{ $project['name'] }}</td>
                     <td class="p-3">{{ $project['title'] }}</td>
                     <td class="p-3"><pre>{{ isset($project['slug']) ? $project['slug'] : '/' . $project['name'] }}</pre></td>
@@ -29,6 +29,6 @@
             @endforeach
         </tbody>
     </table>
-    <p class="pt-4 text-right"><a href="{{route('admin.projects.create')}}" class="bg-green-800 text-white px-4 py-2 rounded"><i class="bi bi-plus"></i> {{__('Add Project')}}</a></p>
+    <p class="pt-4 text-right"><a href="{{route('admin.projects.create')}}" class="bg-green-800 hover:bg-green-700 text-white px-4 py-2 rounded"><i class="bi bi-plus"></i> {{__('Add Project')}}</a></p>
 
 @endsection

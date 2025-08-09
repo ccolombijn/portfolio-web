@@ -3,7 +3,12 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Admin\AdminController as Controller;
+use Carbon\Carbon;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Storage;
+use Spatie\Image\Image;
+use Spatie\ImageOptimizer\OptimizerChainFactory;
 
 class FilesController extends Controller
 {
@@ -52,14 +57,17 @@ class FilesController extends Controller
         }
         return $files;
     }
-    private function getFile($path)
+    /**
+     * 
+     */
+    private function getFile($path): array
     {
         $file_path_arr = explode('/',$path);
         $file_path = storage_path('app/public/' . $path);
         $file_name = end($file_path_arr);
         $file_type = Storage::mimeType($path);
         $file_checksum = hash_file('sha256', $file_path);
-        $file_date = Storage::lastModified($path);
+        $file_date = Carbon::createFromTimestamp(Storage::lastModified($path))->format('d-m-Y h:i');
         $file_contents = Storage::get($path);
         switch ($file_type) {
             case 'application/json':
@@ -79,7 +87,8 @@ class FilesController extends Controller
             'content' => $file_contents,
             'hash' => $file_checksum,
             'date' => $file_date,
-            'path' => $file_path
+            'path' => $file_path,
+            'size' => $this->getFilesize(filesize($file_path))
         ];
     }
     /**
@@ -112,11 +121,73 @@ class FilesController extends Controller
     {
         if(empty($path) || !str_contains($path, '.')) {
             $files = $this->getFiles($path);
-            return view('admin.files.index', compact('files'));
+            return view('admin.files.index', [
+                'files' => $files,
+                'path' => $path
+            ]);
         } else {
             $file = $this->getFile($path);
             //dd($file);
             return view('admin.files.view', compact('file'));
         }
+    }
+    /**
+     * 
+     */
+    public function upload(string $path = '')
+    {
+        return view('admin.files.upload', ['path' => $path ?: '.']);
+    }
+    /**
+     * 
+     */
+    public function store(Request $request, string $path = ''): \Illuminate\Http\JsonResponse
+    {
+        $request->validate([
+            'files_to_upload'   => 'sometimes|required|array',
+            'files_to_upload.*' => 'file|mimes:jpg,jpeg,png,gif,svg,webp|max:5120', // Max 5MB
+        ]);
+
+        if ($request->hasFile('files_to_upload')) {
+            $optimizerChain = OptimizerChainFactory::create();
+
+            foreach ($request->file('files_to_upload') as $file) {
+                $savedRelativePath = $file->storeAs($path, $file->getClientOriginalName(), 'public');
+                $physicalPath = Storage::disk('public')->path($savedRelativePath);
+                $optimizerChain->optimize($physicalPath);
+                $webpPath = pathinfo($physicalPath, PATHINFO_DIRNAME) . '/' . pathinfo($physicalPath, PATHINFO_FILENAME) . '.webp';
+                Image::load($physicalPath)->save($webpPath);
+            }
+
+        }
+        return response()->json(['success' => true, 'message' => 'Files uploaded and optimized successfully!']);
+    }
+    /**
+     * 
+     */
+    public function destroy(string $path): \Illuminate\Http\RedirectResponse
+    {
+        $file_path_arr = explode('/',$path);
+        $file_name = end($file_path_arr);
+        $file_mime_type = mime_content_type($path);
+        if(str_contains($file_mime_type,'image')) {
+            $file_name_arr = explode('.',$file_name);
+            $file_webp_path = str_replace($file_name,$file_name_arr[0] . '.webp',$path);
+            if(file_exists($file_webp_path)){
+                File::delete($file_webp_path);
+            }
+        }
+        $redirect_path = str_replace(storage_path(),'',str_replace($file_name,'',$path));
+        File::delete($path);
+        return redirect()->route('admin.files.index',['path' => $redirect_path])->with('success', 'File ' . $file_name . ' removed');
+
+    }
+    /**
+     * 
+     */
+    public function createFolder(string $path): \Illuminate\Http\RedirectResponse
+    {
+        Storage::makeDirectory($path);
+        return redirect()->route('admin.files.index',['path' => $path])->with('success', 'Folder ' . $path . ' created');
     }
 }

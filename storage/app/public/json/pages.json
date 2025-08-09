@@ -40,10 +40,5 @@
         "route": "/contact",
         "controller": "ContactController",
         "method": "show"
-    },
-    {
-        "name": "test",
-        "title": "Test",
-        "route": "/test"
     }
 ]

@@ -1,2 +1,12 @@
-import { form } from "./form";
-form();
+//import { form } from "./form";
+import { imgSelect } from "./imgSelect";
+import { table } from "./table";
+import { upload } from "./upload";
+import { page } from "./page";
+import { initializeFilePreviews } from "./preview";
+//form();
+imgSelect();
+table();
+upload();
+page();
+initializeFilePreviews();

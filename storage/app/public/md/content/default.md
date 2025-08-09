@@ -1,1 +1,1 @@
-{cta}
+{sections.cta}

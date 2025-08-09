@@ -2,7 +2,6 @@
     {
         "name": "prico-jobcoaching",
         "title": "PRICO Jobcoaching",
-        "source": "storage",
         "slug": "prico-jobcoaching",
         "image_url": "/images/projects/prico_web.png"
     },

@@ -29,6 +29,7 @@ foreach (collect(app('pages.data'))->all() as $page) {
 
 Route::post('/ai-generate', [GeminiController::class, 'generate'])->name('gemini.generate');
 Route::post('/contact', [ContactController::class, 'submit'])->name('contact.submit');
+Route::get('/download/{file}', [ContactController::class, 'download'])->name('contact.download');
 Auth::routes();
 Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () {
     // Admin Dashboard
@@ -52,7 +53,10 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
 
     // File Management
     Route::get('/files', [FilesController::class, 'index'])->name('files.index');
-    Route::get('/files/{path}', [FilesController::class, 'index'])->name('files.view')->where('path', '.*'); 
+    Route::get('/files/upload/{path?}', [FilesController::class, 'upload'])->name('files.upload')->where('path', '.*');
+    Route::post('/files/upload/{path?}', [FilesController::class, 'store'])->name('files.upload.store')->where('path', '.*');
+    Route::delete('/files/delete/{path}', [FilesController::class, 'destroy'])->name('files.destroy')->where('path', '.*');
+    Route::get('/files/{path}', [FilesController::class, 'index'])->name('files.view')->where('path', '.*');
     // Settings
     Route::get('/settings', [SettingsController::class, 'index'])->name('settings.index');
 });

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Facades\Storage;
 
 class ContactController extends Controller
 {
@@ -12,8 +13,10 @@ class ContactController extends Controller
     // {
     //     parent::__construct($content);
     // }
-
-    public function show(array $page) 
+    /**
+     * 
+     */
+    public function show(array $page): \Illuminate\Contracts\View\View
     {
         $header = $this->getPugMarkdownHTML('header',$page);
         $footer = $this->getPugMarkdownHTML('footer',$page);
@@ -23,8 +26,10 @@ class ContactController extends Controller
             'footer' => $footer
         ]);
     }
-
-    public function submit(Request $request)
+    /**
+     * 
+     */
+    public function submit(Request $request): \Illuminate\Http\RedirectResponse
     {
         $validated = $request->validate([
             'name' => 'required|min:2|string',
@@ -47,12 +52,18 @@ class ContactController extends Controller
                 $message->to(app('contact.data')['email']);
                 $message->subject($data['subject']);
             });
-    
+
             Session::flash('success', 'Your email has been sent');
         }
-        
 
         return redirect('contact');
 
+    }
+    /**
+     * 
+     */
+    public function download(string $file): \Symfony\Component\HttpFoundation\StreamedResponse
+    {
+        return Storage::download($file);
     }
 }

@@ -17,3 +17,31 @@
         }
     }
 }
+form {
+    button {
+        &[disabled] {
+            @apply opacity-[0.5] cursor-not-allowed;
+        }
+    }
+    &#upload-form {
+        transition: background-color 0.2s ease-in-out, border-color 0.2s ease-in-out;
+        border: 2px dashed transparent;
+    }
+    
+    &#upload-form.is-dragover {
+        border-color: #3b82f6;
+        background-color: #eff6ff; 
+    }
+}
+
+thead, .editor-toolbar {
+    @apply bg-gradient-to-b from-white to-stone-300;
+}
+
+.CodeMirror {
+    @apply shadow;
+}
+
+select {
+    @apply p-2 border border-stone-300 rounded shadow;
+}

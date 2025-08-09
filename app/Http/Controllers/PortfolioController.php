@@ -10,14 +10,13 @@ class PortfolioController extends Controller
 
     public function __construct(array $projects)
     {
-        //parent::__construct($content);
         $this->projects = $projects;
     }
     public function show(array $page) {}
     /**
      * @todo complete project view / include skills
      */
-    public function project(string $project, array $page)
+    public function project(string $project, array $page): \Illuminate\Contracts\View\View
     {
 
         $project = $this->projects[array_search(request()->route('project'), 
@@ -46,7 +45,7 @@ class PortfolioController extends Controller
         }
     }
 
-    public function index(array $page)
+    public function index(array $page): \Illuminate\Contracts\View\View
     {
         $this->data = [
             'page' => $page,
