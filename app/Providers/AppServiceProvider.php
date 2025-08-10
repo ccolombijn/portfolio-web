@@ -2,6 +2,9 @@
 
 namespace App\Providers;
 
+use App\Contracts\ContactRepositoryInterface;
+use App\Contracts\PageRepositoryInterface;
+use App\Contracts\ProjectRepositoryInterface;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\FilesController;
 use App\Http\Controllers\Admin\PageController as AdminPageController;
@@ -10,20 +13,33 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
-use App\Http\Controllers\PageController;
 use App\Http\Controllers\PortfolioController;
 use App\Http\Controllers\ContactController;
-use App\Http\Controllers\Controller;
-use App\Http\Controllers\GeminiController;
+use App\Repositories\JsonContactRepository;
+use App\Repositories\JsonPageRepository;
+use App\Repositories\JsonProjectRepository;
 use Illuminate\Support\Facades\Storage;
+
 
 class AppServiceProvider extends ServiceProvider
 {
+
+   
     /**
      * Register any application services.
      */
     public function register(): void
     {
+        $this->app->singleton(PageRepositoryInterface::class, JsonPageRepository::class);
+        $this->app->singleton(ProjectRepositoryInterface::class, JsonProjectRepository::class);
+        $this->app->singleton(ContactRepositoryInterface::class, JsonContactRepository::class);
+
+
+        // if (config('app.data_source') === 'database') {
+        //     $this->app->singleton(RepositoryInterface::class, DatabasePageRepository::class);
+        // } else {
+        //     $this->app->singleton(RepositoryInterface::class, JsonPageRepository::class);
+        // }
         $sources = [
             'pages',
             'content',

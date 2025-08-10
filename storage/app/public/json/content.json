@@ -1,21 +1,19 @@
 {
-    "description" : "Portofolio website van Christoffel Colombijn. Hier is een overzicht te vinden van projecten en een omschrijving van mijn vaardigheden.",
-    "sections.cta" : {
-        "title" : "Neem contact met me op",
-        "text" : "Geinteresseerd? Ik ga graag met je in gespek over wat we voor elkaar kunnen betekenen.",
-        "image_url" : "images/cc_finished.png",
-        "link1" : "contact.show",
-        "link1_text" : "Stuur me een bericht",
-        "link2" : "about",
-        "link2_text" : "Meer over mij"
+    "description": "Portofolio website van Christoffel Colombijn. Hier is een overzicht te vinden van projecten en een omschrijving van mijn vaardigheden en nog veel meer!",
+    "header_img": "resources/images/CLOUDS.png",
+    "sections.cta": {
+        "title": "Neem contact met me op",
+        "text": "Geinteresseerd? Ik ga graag met je in gesprek over wat we voor elkaar kunnen betekenen!",
+        "image_url": "resources/images/cc_finished.png",
+        "link1": "contact.show",
+        "link1_text": "Stuur me een bericht",
+        "link2": "about",
+        "link2_text": "Meer over mij"
     },
-    "label" : {
-        "subject" : "Onderwerp",
-        "name" : "Naam",
-        "email" : "E-mail",
-        "message" : "Bericht"
-    },
-    "clickblocks" : [
-
-    ]
+    "label": {
+        "subject": "Onderwerp",
+        "name": "Naam",
+        "email": "E-mail",
+        "message": "Bericht"
+    }
 }

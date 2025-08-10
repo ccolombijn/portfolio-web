@@ -13,7 +13,7 @@
                 <th class="p-3 text-left">{{__('Name')}}</th>
                 <th class="p-3 text-left">{{__('Title')}}</th>
                 <th class="p-3 text-left">{{__('Route')}}</th>
-                <th class="p-3 text-left">{{__('Actions')}}</th>
+                <th class="p-3 text-left"></th>
             </tr>
         </thead>
         <tbody>
@@ -23,7 +23,7 @@
                     <td class="p-3">{{ $project['title'] }}</td>
                     <td class="p-3"><pre>{{ isset($project['slug']) ? $project['slug'] : '/' . $project['name'] }}</pre></td>
                     <td class="p-3">
-                        <a href="{{ route('admin.projects.edit', $project['name']) }}" class="text-blue-500">{{__('Edit')}}</a>
+                        <a href="{{ route('admin.projects.edit', $project['name']) }}" class="text-blue-500"></a>
                     </td>
                 </tr>
             @endforeach

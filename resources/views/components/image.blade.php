@@ -10,9 +10,10 @@
     $webpUrl = '';
     $dimensions = '';
     $mimeType = 'image/png';
+    if(str_contains($src,'storage')) $source = 'storage';
     // resources
     if ($source === 'resources') {
-        $fullResourcePath = 'resources/' . ltrim($src, '/');
+        $fullResourcePath = str_contains($src,'resources') ? ltrim($src, '/') : 'resources/' . ltrim($src, '/');
         $physicalPath = resource_path(ltrim($src, '/'));
         
         $fallbackUrl = Vite::asset($fullResourcePath);

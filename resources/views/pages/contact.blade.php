@@ -1,7 +1,7 @@
 @extends('layouts.app')
 @section('title', $page['title'])
 @section('header')
-    @include('layouts.header', ['header' => $header])
+    @include('layouts.header', ['header' => $content['header']])
 @endsection
 @section('content')
 <section class="content">
@@ -24,5 +24,5 @@
 </section>
 @endsection
 @section('footer')
-    @include('layouts.footer' ,['footer' => $footer])
+    @include('layouts.footer' ,['footer' => $content['footer']])
 @endsection

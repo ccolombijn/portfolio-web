@@ -22,9 +22,9 @@
     </script>
 
     @php
+        $content = app('content.data');
         
-        
-        $cloudsPngUrl = Vite::asset('resources/images/CLOUDS.png');
+        $cloudsPngUrl = Vite::asset($content['header_img']);
         $cloudsWebpUrl = str_replace('.png', '.webp', $cloudsPngUrl);
 
         $sparklePngUrl = Vite::asset('resources/images/sparkle.png');

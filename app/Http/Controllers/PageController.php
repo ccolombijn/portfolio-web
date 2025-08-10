@@ -2,43 +2,37 @@
 
 namespace App\Http\Controllers;
 
+use App\Contracts\PageRepositoryInterface;
+use App\Services\PageContentService;
+
 class PageController extends Controller
 {
-
+    public function __construct(
+        private PageContentService $pageContentService
+    ) {}
     /**
      * Returns default page view
      */
     public function show(array $page): \Illuminate\Contracts\View\View
     {
 
-         $contentData = [];
-         $parts = isset($page['parts']) ? $page['parts'] : $this->parts;
-         
-         foreach ($parts as $part) { 
+        if (!$page) {
+            abort(404);
+        }
 
-            $pageContent = $this->getPugMarkdownHTML($part, $page); // md/pug part content 
+        $content = [];
+        $parts = $page['parts'] ?? ['header', 'content', 'footer'];
+        
+        foreach ($parts as $part) { 
+            $content[$part] = $this->pageContentService->getRenderedPartContent($part, $page);
+        }
 
-            $contentData[$part] = $pageContent;
-            if(isset($page[$part])) {
-                $viewData = $page[$part]; // component data in page 
-            } else {
-                $viewData = app('content.data')['sections.' . $part] ?? []; // global
-            }
-
-            $partComponent = 'components.sections.' . $part;
-            if(view()->exists($partComponent) && !in_array($part,$this->parts)) {
-                $contentData[$part] = view($partComponent, $viewData)->render(); // Add part as rendered view
-            }
-         }
-
-         $data = [
-             'page' => $page,
-             'parts' => $parts,
-             'content' => $contentData,
-         ];
-
-         return view(isset($page['view']) ? $page['view'] : 'pages.default', $data);
-
+        $view = $page['view'] ?? 'pages.default';
+        
+        return view($view, [
+            'page' => $page,
+            'content' => $content,
+            'parts' => $parts, 
+        ]);
     }
-
 }

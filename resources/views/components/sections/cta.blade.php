@@ -6,7 +6,7 @@
             @endif
         </div>
         <div class="cta__text">
-            <h2 class="cta__title">{{$title}}</h2>
+            @if(isset($title))<h2 class="cta__title">{{$title}}</h2>@endif
             @if(isset($subtitle))<h3 class="cta__subtitle">{{$subtitle}}</h3>@endif
             @if(isset($text))<p class="cta__text">{{$text}}</p>@endif
             <div class="cta__buttons">

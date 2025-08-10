@@ -12,7 +12,7 @@
                 <th class="p-3 text-left">Name</th>
                 <th class="p-3 text-left">Type</th>
                 <th class="p-3 text-left">Size</th>
-                <th class="p-3 text-left">Actions</th>
+                <th class="p-3 text-left"></th>
             </tr>
         </thead>
         <tbody>
@@ -27,7 +27,7 @@
                     <td class="p-3">{{ $file['type'] }}</td>
                     <td class="p-3">{{ $file['size'] }}</td>
                     <td class="p-3">
-                        <a href="{{ route('admin.files.index', $file['name']) }}" class="text-blue-500">Edit</a>
+                        <a href="{{ route('admin.files.index', $file['name']) }}" class="text-blue-500"></a>
                     </td>
                 </tr>
                 @endif

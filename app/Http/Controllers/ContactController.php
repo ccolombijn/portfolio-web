@@ -2,34 +2,50 @@
 
 namespace App\Http\Controllers;
 
+use App\Contracts\PageRepositoryInterface;
+use App\Contracts\ContactRepositoryInterface;
+use App\Mail\ContactFormMail;
+use App\Services\PageContentService;
+use Illuminate\Contracts\View\View;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Storage;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ContactController extends Controller
 {
-    // public function __construct(array $content)
-    // {
-    //     parent::__construct($content);
-    // }
+    public function __construct(
+        private PageRepositoryInterface $pageRepository,
+        private ContactRepositoryInterface $contactRepository,
+        private PageContentService $pageContentService
+    ) {}
+
     /**
-     * 
+     * Display the contact page.
      */
-    public function show(array $page): \Illuminate\Contracts\View\View
+    public function show(): View
     {
-        $header = $this->getPugMarkdownHTML('header',$page);
-        $footer = $this->getPugMarkdownHTML('footer',$page);
+        $page = $this->pageRepository->findBy('name', 'contact');
+        if (!$page) abort(404);
+
+        $contentData = [];
+        $parts = $page['parts'] ?? ['header', 'content', 'footer'];
+        foreach ($parts as $part) {
+            $contentData[$part] = $this->pageContentService->getRenderedPartContent($part, $page);
+        }
+
         return view('pages.contact', [
             'page' => $page,
-            'header' => $header,
-            'footer' => $footer
+            'content' => $contentData,
+            'parts' => $parts,
         ]);
     }
+
     /**
-     * 
+     * Handle the contact form submission.
      */
-    public function submit(Request $request): \Illuminate\Http\RedirectResponse
+    public function submit(Request $request): RedirectResponse
     {
         $validated = $request->validate([
             'name' => 'required|min:2|string',
@@ -38,31 +54,18 @@ class ContactController extends Controller
             'message' => 'required|min:10'
         ]);
 
-        if($validated) {
-    
-            $data = array(
-                'name' => $request->name,
-                'email' => $request->email,
-                'subject' => $request->subject,
-                'bodyMessage' => $request->message
-            );
+        $contactDetails = $this->contactRepository->getDetails();
+        $recipientEmail = $contactDetails['email'] ?? 'default-recipient@example.com';
 
-            Mail::send('emails.contact', $data, function($message) use ($data){
-                $message->from($data['email']);
-                $message->to(app('contact.data')['email']);
-                $message->subject($data['subject']);
-            });
+        Mail::to($recipientEmail)->send(new ContactFormMail($validated));
 
-            Session::flash('success', 'Your email has been sent');
-        }
-
-        return redirect('contact');
-
+        return redirect()->route('contact.show')->with('success', 'Your email has been sent!');
     }
+
     /**
-     * 
+     * Handle file downloads from the public disk.
      */
-    public function download(string $file): \Symfony\Component\HttpFoundation\StreamedResponse
+    public function download(string $file): StreamedResponse
     {
         return Storage::download($file);
     }

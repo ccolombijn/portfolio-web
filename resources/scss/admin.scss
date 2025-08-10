@@ -32,7 +32,29 @@ form {
         border-color: #3b82f6;
         background-color: #eff6ff; 
     }
+    .form-input {
+        label {
+            @apply mb-2;
+        }
+        input[type="text"] {
+            @apply w-full p-2 border border-stone-300 rounded shadow;
+        }
+        p.error {
+            @apply text-red-500 text-sm;
+        }
+
+    }
 }
+.alert {
+    @apply p-3 mb-4 rounded;
+    &-success {
+        @apply bg-green-200 text-green-800;
+    }
+    &-danger {
+        @apply bg-red-200 text-red-800;
+    }
+}
+
 
 thead, .editor-toolbar {
     @apply bg-gradient-to-b from-white to-stone-300;

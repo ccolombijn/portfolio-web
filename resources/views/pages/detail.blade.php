@@ -7,7 +7,7 @@
     <section class="content {{$item->name}}">
         <div class="content__container">
             <div class="{{$item->name}}-detail">
-                <a class="btn btn--secondary" href="{{ route($item->name . '.index') }}" aria-label="Terug naar {{$item->name}}"><i class="fa-solid fa-arrow-left"></i> Terug naar {{$item->name}}</a>
+                <a class="btn btn--secondary" href="{{ route($name . '.index') }}" aria-label="Terug naar {{$name}}"><i class="fa-solid fa-arrow-left"></i> Terug naar {{$item->name}}</a>
                 <h2>{{ $item->title }}</h2>
                 <div class="{{$item->name}}-description">
                     {!! $item->description !!}

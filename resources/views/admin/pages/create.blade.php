@@ -3,33 +3,13 @@
 @section('content')
     <h1 class="text-2xl font-bold mb-4">Add Page</h1>
 
-    <form action="{{ route('admin.pages.store') }}" method="POST" class="bg-white p-6 rounded shadow">
+    <form action="{{ route('admin.pages.store') }}" method="POST">
         @csrf
         @method('POST')
-        <div class="mb-4">
-            <label for="title" class="block mb-2">Title</label>
-            <input type="text" name="title" id="title" value="{{ old('title') }}" class="w-full p-2 border border-stone-300 rounded shadow">
-            @error('title')<p class="text-red-500 text-sm">{{ $message }}</p>@enderror
-        </div>
-
-        <div class="mb-4">
-            <label for="name" class="block mb-2">Name</label>
-            <input type="text" name="name" id="name" value="{{ old('name') }}" class="w-full p-2 border border-stone-300 rounded shadow">
-            @error('name')<p class="text-red-500 text-sm">{{ $message }}</p>@enderror
-        </div>
-
-        <div class="mb-4">
-            <label for="route" class="block mb-2">Route</label>
-            <input type="text" name="route" id="route" value="{{ old('route') }}" class="w-full p-2 border border-stone-300 rounded shadow">
-            @error('route')<p class="text-red-500 text-sm">{{ $message }}</p>@enderror
-        </div>
-
-        <div class="mb-4">
-            <label for="exclude_nav" class="b-2">Exclude in nav</label>
-            <input type="checkbox" name="exclude_nav" id="exclude_nav">
-            @error('route')<p class="text-red-500 text-sm">{{ $message }}</p>@enderror
-        </div>
-
+        <x-forms.input name="title" />
+        <x-forms.input name="name" />
+        <x-forms.input name="route" />
+        <x-forms.input type="checkbox" name="exclude_nav" label="Exclude in nav" />
         <div class="mb-4 w-1/3" id="controllers" data-controllers="{{json_encode($controllers)}}">
             <label for="controller" class="block mb-2">Controller</label>
             <input type="text" name="controller" id="controller" placeholder="PageController" value="{{ old('controller') }}" class="p-2 border border-stone-300 rounded">@<input type="text" name="method" id="method" placeholder="show" value="{{ old('method') }}" class="p-2 border border-stone-300 rounded">
@@ -83,24 +63,4 @@
             <button type="submit" class="bg-gray-800 hover:bg-blue-600 text-white px-4 py-2 cursor-pointer rounded"><i class="bi bi-floppy"></i> Save Changes</button>
         </div>
     </form>
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            const partsList = document.getElementById('parts');
-            const orderInput = document.getElementById('parts-order-input');
-
-            const updateOrder = () => {
-                const parts = Array.from(partsList.children)
-                    .map(el => el.getAttribute('data-part-name'));
-                orderInput.value = parts.join(',');
-            };
-
-            new Sortable(partsList, {
-                animation: 150,
-                onUpdate: function () {
-                    updateOrder();
-                }
-            });
-            updateOrder();
-        });
-    </script>
 @endsection

@@ -2,299 +2,165 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Http\Controllers\Admin\AdminController as Controller;
+use App\Contracts\PageRepositoryInterface;
+use App\Contracts\RepositoryInterface;
+use App\Services\PageContentService;
+use App\Services\PageFormOptionsService;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\File;
+use Illuminate\View\View;
 
-class PageController extends Controller
+class PageController extends AdminController
 {
+    public function __construct(
+        private PageRepositoryInterface $pageRepository,
+        private PageContentService $contentService,
+        private PageFormOptionsService $formOptionsService
+    ) {}
 
-    protected $pages;
-
-    public function __construct(array $pages)
-    {
-        $this->pages = $pages;
-    }
     /**
-     * 
+     * Display a listing of the pages.
      */
-    private function getPages(): array
+    public function index(): View
     {
-        return $this->pages;
-    }
-    /**
-     * 
-     */
-    private function getControllers(): array
-    {
-        $controllers = [];
-        $path = app_path('Http/Controllers');
-        foreach(scandir($path) as $item) {
-            if(str_contains($item, '.php')){
-                $controller = str_replace('.php','',$item);
-                if($controller === 'Controller') continue;
-                $cls = new \ReflectionClass('App\Http\\Controllers\\' . $controller);
-                $methods = [];
-                //dd($cls->getMethods());
-                foreach($cls->getMethods() as $method){
-                    if($method->class === 'App\Http\Controllers\\'.$controller){
-                        //if($controller === 'PageController') dd($cls->getMethods());
-                        $returnType = $method->getReturnType();
-                        if ($returnType && $returnType->getName() === 'Illuminate\Contracts\View\View') {
-                            $methods[] = $method->name;
-                        }
-                    }
-                }
-                if(!empty($methods)) $controllers[$controller] = $methods;
-            }
-        }
-        return $controllers;
-    }
-    /**
-     * 
-     */
-    private function getPageViews(): array
-    {
-        $views = [];
-        $path = resource_path('views/pages');
-        foreach(scandir($path) as $file){
-            if(str_contains($file,'php')){
-                $views[] = 'pages.' . str_replace('.blade.php','',$file);
-            }
-        }
-        return $views;
-    }
-    /**
-     * 
-     */
-    private function savePages(array $pages): void
-    {
-        $options = JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES;
-        File::put(storage_path('app/public/json/pages.json'), json_encode($pages, $options));
-        Cache::forget('pages.json.data');
-    }
-    /**
-     * 
-     */
-    private function saveParts(Request $request) : void 
-    {
-        foreach($this->parts as $part) {
-            if(strlen($this->getMarkdownContent($part,['name' => 'default'])) !== strlen(isset($request[$part]) ? $request[$part] : '')){
-                File::put(storage_path('app/public/md/' . $part . '/'. $request['name'] . '.md'),$request[$part]);
-            }
-        }
-    }
-    /**
-     * 
-     */
-    public function index(): \Illuminate\Contracts\View\View
-    {
-        $pages = $this->getPages();
-        return view('admin.pages.index', compact('pages'));
-    }
-    /**
-     * 
-     */
-    private function getPageIndex($pageName): int
-    {
-        $pages = $this->getPages();
-
-        $pageNameParts = explode('.',$pageName);
-        if(isset($pageNameParts[1])){
-            $page = collect($pages)->where('name', $pageNameParts[0])->where('method',$pageNameParts[1]);
-        }else {
-            $page = collect($pages)->where('name', $pageNameParts[0]);
-        }
-
-        return array_keys($page->toArray())[0];
-    }
-    /**
-     * 
-     */
-    public function edit($pageName): \Illuminate\Contracts\View\View
-    {
-        $pages = $this->getPages();
-        if(str_contains($pageName,'.')){
-            $pageNameParts = explode('.',$pageName);
-            $page = collect($pages)->where('name', $pageNameParts[0])->where('method',$pageNameParts[1])->first();
-        } else {
-            $page = collect($pages)->firstWhere('name', $pageName);
-        }
-
-        if (!$page) {
-            abort(404);
-        }
-        $header = $this->getMarkdownContent('header',$page);
-        $content = $this->getMarkdownContent('content',$page);
-        $footer = $this->getMarkdownContent('footer',$page);
-        $parts = isset($page['parts']) ? $page['parts'] : $this->parts;
-        $sectionComponentFiles = scandir(resource_path('views/components/sections'));
-        $sections = [];
-        foreach($sectionComponentFiles as $file) {
-            if(str_contains($file,'blade.php')){
-                $sections[] = str_replace('.blade.php','',$file);
-            }
-        }
-        $selected = array_intersect($parts, $sections);
-        $remainder = array_diff($sections,$parts);
-        $sorted = array_merge($selected,$remainder);
-        return view('admin.pages.edit',[
-            'page' => $page,
-            'parts' => $parts,
-            'selected_parts' => $selected,
-            'sorted_sections' => $sorted,
-            'sections' => $sections,
-            'controllers' => $this->getControllers(),
-            'views' => $this->getPageViews(),
-            'header' => $header,
-            'content' => $content,
-            'footer' => $footer
+        return view('admin.pages.index', [
+            'pages' => $this->pageRepository->all()
         ]);
     }
+
     /**
-     * 
+     * Show the form for creating a new page.
      */
-    public function update(Request $request, $pageName): \Illuminate\Http\RedirectResponse
+    public function create(): View
+    {
+        // Default parts for a new page
+        $defaultParts = ['header', 'content', 'footer'];
+
+        return view('admin.pages.create', [
+            'controllers' => $this->formOptionsService->getControllers(),
+            'views' => $this->formOptionsService->getPageViews(),
+            'sorted_sections' => $this->formOptionsService->getSortedParts($defaultParts),
+            'selected_parts' => $defaultParts,
+        ]);
+    }
+
+    /**
+     * Store a newly created page in storage.
+     */
+    public function store(Request $request): RedirectResponse
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'title' => 'required|string|max:255',
-            'route' => 'string|max:255|nullable',
-            'controller' => 'string|max:255|nullable',
-            'method' => 'string|max:255|nullable',
-            'view' => 'sometimes|string|max:255|nullable',
-            'exclude_nav' => 'boolean',
-            'parts' => 'sometimes|array',
+            'route' => 'nullable|string|max:255',
+            'controller' => 'nullable|string|max:255',
+            'method' => 'nullable|string|max:255',
+            'view' => 'nullable|string|max:255',
+            'parts' => 'nullable|array',
             'parts_order' => 'required|string',
         ]);
 
-        $pages = $this->getPages();
-
-        $pageIndex = $this->getPageIndex($pageName);
-        if ($pageIndex === false) {
-            abort(404);
-        }
-        $pages[$pageIndex]['name'] = $validated['name'];
-        $pages[$pageIndex]['title'] = $validated['title'];
-
-        $optionalFields = ['route', 'controller', 'method', 'view'];
-        foreach ($optionalFields as $field) {
-            if (!empty($validated[$field])) {
-                $pages[$pageIndex][$field] = $validated[$field];
-            } else {
-                unset($pages[$pageIndex][$field]);
-            }
-        }
-
-        $selectedParts = $validated['parts'] ?? [];
-        $orderedPartNames = explode(',', $validated['parts_order']);
-        $finalOrderedParts = collect($orderedPartNames)
-            ->filter(fn($partName) => in_array($partName, $selectedParts))
-            ->values()
-            ->all();
-        if($finalOrderedParts !== $this->parts) {
-            $pages[$pageIndex]['parts'] = $finalOrderedParts;
-        } else {
-            unset($pages[$pageIndex]['parts']);
-        }
-
-        $this->saveParts($request);
-        $this->savePages($pages);
-
-        return redirect()->route('admin.pages.index')->with('success', 'Page updated successfully!');
-    }
-    /**
-     * 
-     */
-    public function create(): \Illuminate\Contracts\View\View
-    {
-        $header = $this->getMarkdownContent('header',['name' => 'default']);
-        $content = $this->getMarkdownContent('content',['name' => 'default']);
-        $footer = $this->getMarkdownContent('footer',['name' => 'default']);
-
-        $parts = $this->parts;
-        $sectionComponentFiles = scandir(resource_path('views/components/sections'));
-        $sections = [];
-        foreach($sectionComponentFiles as $file) {
-            if(str_contains($file,'blade.php')){
-                $sections[] = str_replace('.blade.php','',$file);
-            }
-        }
-        $selected = array_intersect($parts, $sections);
-        $remainder = array_diff($sections,$parts);
-        $sorted = array_merge($selected,$remainder);
-
-        return view('admin.pages.create',[
-            'parts' => $parts,
-            'selected_parts' => $selected,
-            'sorted_sections' => $sorted,
-            'controllers' => $this->getControllers(),
-            'views' => $this->getPageViews(),
-            'sections' => $sections,
-            'header' => $header,
-            'content' => $content,
-            'footer' => $footer
-        ]);
-    }
-    /**
-     * 
-     */
-    public function store(Request $request): \Illuminate\Http\RedirectResponse
-    {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'title' => 'required|string|max:255',
-            'route' => 'string|max:255|nullable',
-            'controller' => 'string|max:255|nullable',
-            'method' => 'string|max:255|nullable',
-            'view' => 'sometimes|string|max:255|nullable',
-            'exclude_nav' => 'boolean',
-            'parts' => 'sometimes|array',
-            'parts_order' => 'required|string',
-        ]);
-
-        $pages = $this->getPages();
-        if(in_array($validated['name'], array_column($pages,'name'))){
+        // Check for duplicate name
+        if ($this->pageRepository->find($validated['name'])) {
             return redirect()->back()
-            ->withErrors(['name' => 'This name is already in use. Please choose a different one.'])
-            ->withInput();
+                ->withErrors(['name' => 'This name is already in use. Please choose a different one.'])
+                ->withInput();
         }
-        $page = [];
-        $page['name'] = $validated['name'];
-        $page['title'] = $validated['title'];
+
+        // Create the new page data array from validated data
+        $newPage = [
+            'name' => $validated['name'],
+            'title' => $validated['title'],
+        ];
 
         $optionalFields = ['route', 'controller', 'method', 'view'];
         foreach ($optionalFields as $field) {
             if (!empty($validated[$field])) {
-                $page[$field] = $validated[$field];
+                $newPage[$field] = $validated[$field];
             }
         }
-        $pages[] = $page;
+
         $selectedParts = $validated['parts'] ?? [];
         $orderedPartNames = explode(',', $validated['parts_order']);
-        $finalOrderedParts = collect($orderedPartNames)
+        $newPage['parts'] = collect($orderedPartNames)
             ->filter(fn($partName) => in_array($partName, $selectedParts))
             ->values()
             ->all();
-        if($finalOrderedParts !== $this->parts) {
-            $page['parts'] = $finalOrderedParts;
-        }
 
-        $this->saveParts($request);
-        $this->savePages($pages);
+        $this->pageRepository->create($newPage);
+
+        $this->contentService->savePartsForPage($request, $newPage);
 
         return redirect()->route('admin.pages.index')->with('success', 'Page added successfully!');
     }
+
     /**
-     * 
+     * Show the form for editing the specified page.
      */
-    public function destroy(string $pageName): \Illuminate\Http\RedirectResponse
+    public function edit(string $pageName): View
     {
-        $pages = $this->getPages();
-        $pageIndex = $this->getPageIndex($pageName);
-        unset($pages[$pageIndex]);
-        $this->savePages($pages);
+        $page = $this->pageRepository->find($pageName);
+        if (!$page) {
+            abort(404);
+        }
+
+        $pageParts = $page['parts'] ?? ['header', 'content', 'footer'];
+        $header = $this->contentService->getRenderedPartContent('header', $page);
+        $content = $this->contentService->getRenderedPartContent('content', $page);
+        $footer = $this->contentService->getRenderedPartContent('footer', $page);
+        return view('admin.pages.edit', [
+            'page' => $page,
+            'controllers' => $this->formOptionsService->getControllers(),
+            'views' => $this->formOptionsService->getPageViews(),
+            'sorted_sections' => $this->formOptionsService->getSortedParts($pageParts),
+            'selected_parts' => $pageParts,
+            'header' => $header,
+            'content' => $content,
+            'footer' => $footer,
+        ]);
+    }
+
+    /**
+     * Update the specified page in storage.
+     */
+    public function update(Request $request, string $pageName): RedirectResponse
+    {
+        $validated = $request->validate([
+            'title' => 'required|string|max:255',
+            'route' => 'nullable|string|max:255',
+            'controller' => 'nullable|string|max:255',
+            'method' => 'nullable|string|max:255',
+            'view' => 'nullable|string|max:255',
+            'parts' => 'nullable|array',
+            'parts_order' => 'required|string',
+        ]);
+
+        $updateData = $validated;
+        unset($updateData['parts'], $updateData['parts_order']); // Remove temporary fields
+
+        $selectedParts = $validated['parts'] ?? [];
+        $orderedPartNames = explode(',', $validated['parts_order']);
+        $updateData['parts'] = collect($orderedPartNames)
+            ->filter(fn($partName) => in_array($partName, $selectedParts))
+            ->values()
+            ->all();
+
+        $this->pageRepository->update($pageName, $updateData);
+        $page = $this->pageRepository->find($pageName); // Get the updated page data
+        $this->contentService->savePartsForPage($request, $page);
+
+        return redirect()->route('admin.pages.index')->with('success', 'Page updated successfully!');
+    }
+
+    /**
+     * Remove the specified page from storage.
+     */
+    public function destroy(string $pageName): RedirectResponse
+    {
+        $this->pageRepository->delete($pageName);
+        // @todo : delete the associated markdown files here
+        // using the PageContentService.
+
         return redirect()->route('admin.pages.index')->with('success', 'Page removed successfully!');
     }
 }

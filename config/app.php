@@ -122,5 +122,20 @@ return [
         'driver' => env('APP_MAINTENANCE_DRIVER', 'file'),
         'store' => env('APP_MAINTENANCE_STORE', 'database'),
     ],
+    
+    /*
+    |--------------------------------------------------------------------------
+    | Application Data Source
+    |--------------------------------------------------------------------------
+    |
+    | This configuration option determine the data source used to save 
+    | all data used in the application pages and any other resource
+    | in storage or database
+    |
+    | Supported options: "json", "database"
+    |
+    */
+
+    'data_source' => env('DATA_SOURCE', 'json'),
 
 ];

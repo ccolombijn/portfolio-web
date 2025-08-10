@@ -11,17 +11,13 @@ use App\Http\Controllers\Admin\SettingsController;
 use Illuminate\Support\Facades\Auth;
 
 foreach (collect(app('pages.data'))->all() as $page) {
-
     $controllerAction = isset($page['controller'])
-        ? 'App\\Http\Controllers\\' . $page['controller'] . '@' . ($page['method'] ?? 'show')
-        : [PageController::class, 'show'];
+        ? 'App\\Http\\Controllers\\' . $page['controller'] . '@' . ($page['method'] ?? 'show')
+        : [PageController ::class, 'show'];
 
-    $routeName = isset($page['method'])
-        ? $page['name'] . '.' . $page['method']
-        : $page['name'];
+    $routeName = $page['name'] . (isset($page['method']) ? '.' . $page['method'] : '');
 
     $routePath = $page['route'] ?? '/' . $page['name'];
-
     Route::get($routePath, $controllerAction)
         ->defaults('page', $page)
         ->name($routeName);
@@ -59,4 +55,5 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
     Route::get('/files/{path}', [FilesController::class, 'index'])->name('files.view')->where('path', '.*');
     // Settings
     Route::get('/settings', [SettingsController::class, 'index'])->name('settings.index');
+    Route::put('/settings', [SettingsController::class, 'update'])->name('settings.update');
 });

@@ -2,61 +2,70 @@
 
 namespace App\Http\Controllers;
 
+use App\Contracts\ProjectRepositoryInterface;
+use App\Services\PageContentService;
+use Illuminate\Contracts\View\View;
 
 class PortfolioController extends Controller
 {
+    protected array $parts = ['header', 'content', 'footer'];
 
-    protected $projects;
+    public function __construct(
+        private ProjectRepositoryInterface $projectRepository,
+        private PageContentService $pageContentService
+    ) {}
 
-    public function __construct(array $projects)
-    {
-        $this->projects = $projects;
-    }
-    public function show(array $page) {}
     /**
-     * @todo complete project view / include skills
+     * Display the portfolio overview page.
+     * The $page array is passed automatically by your dynamic router.
      */
-    public function project(string $project, array $page): \Illuminate\Contracts\View\View
+    public function index(array $page): View
     {
 
-        $project = $this->projects[array_search(request()->route('project'), 
-            array_column($this->projects, 'name'))];
-        $project['header'] = $this->getPugMarkdownHTML('header/projects', $project);
-        $project['description'] = $this->getPugMarkdownHTML('content/projects', $project);
-        $project['name'] = 'portfolio';
+        $projects = $this->projectRepository->all();
 
-        $this->data = [
+        $data = [
             'page' => $page,
+            'items' => $projects,
             'name' => 'portfolio',
+            'route' => 'portfolio.project', // Route name for detail links
+            'key' => 'project',              // The key to use for the route parameter (e.g., project's name)
+        ];
+
+        // Render the main page parts (header, content, footer)
+        foreach ($this->parts as $part) { 
+            $data[$part] = $this->pageContentService->getRenderedPartContent($part, $page);
+        }
+
+        return view('pages.overview', $data);
+    }
+
+    /**
+     * Display a single project detail page.
+     * The $page array and $projectName string are passed by dynamic router
+     */
+    public function project(string $projectName): View
+    {
+
+        $project = $this->projectRepository->findBy('name', $projectName);
+
+        if (!$project) {
+            abort(404);
+        }
+
+        $project['header'] = $this->pageContentService->getRenderedPartContent('header/projects', $project);
+        $project['description'] = $this->pageContentService->getRenderedPartContent('content/projects', $project);
+
+        $data = [
             'item' => (object) $project,
-            'route' => 'portfolio.project',
-            'key' => 'project'
+            'name' => 'portfolio'
         ];
 
         foreach ($this->parts as $part) { 
-            $this->data[$part] = $this->getPugMarkdownHTML($part, $page) ?? '';
+            $data[$part] = $this->pageContentService->getRenderedPartContent($part, $project);
         }
 
-        if($project) { 
-            return view('pages.detail', $this->data);
-        } else {
-            $this->data['items'] = $this->projects;
-            return view('pages.overview', $this->data);
-        }
+        return view('pages.detail', $data);
     }
-
-    public function index(array $page): \Illuminate\Contracts\View\View
-    {
-        $this->data = [
-            'page' => $page,
-            'name' => 'portfolio',
-            'items' => $this->projects,
-            'route' => 'portfolio.project',
-            'key' => 'project'
-        ];
-        foreach ($this->parts as $part) { 
-            $this->data[$part] = $this->getPugMarkdownHTML($part, $page) ?? '';
-        }
-        return view('pages.overview', $this->data);
-    }
+    
 }

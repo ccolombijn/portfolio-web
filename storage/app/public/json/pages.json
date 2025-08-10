@@ -24,12 +24,13 @@
         "title": "Portfolio",
         "route": "/portfolio",
         "controller": "PortfolioController",
-        "method": "index"
+        "method": "index",
+        "parts": ["header", "content", "footer"]
     },
     {
-        "name": "portfolio",
-        "title": "Portfolio",
-        "route": "/portfolio/{project}",
+        "name": "portfolio.project",
+        "title": "Project Detail",
+        "route": "/portfolio/{projectName}",
         "controller": "PortfolioController",
         "method": "project",
         "exclude_nav": true

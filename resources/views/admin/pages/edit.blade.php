@@ -2,7 +2,15 @@
 
 @section('content')
     <h1 class="text-2xl font-bold mb-4">Edit Page: {{ $page['title'] }}</h1>
-
+    @if ($errors->any())
+        <div class="alert alert-danger">
+            <ul>
+                @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
     <form action="{{ route('admin.pages.update', $page['name']) }}" method="POST" class="bg-white p-6 rounded shadow">
         @csrf
         @method('PUT')
@@ -23,11 +31,9 @@
             @error('route')<p class="text-red-500 text-sm">{{ $message }}</p>@enderror
         </div>
 
-        <div class="mb-4">
-            <label for="exclude_nav" class="b-2">Exclude in nav</label>
-            <input type="checkbox" name="exclude_nav" id="exclude_nav"@if(isset($page['exclude_nav'])) checked="{{ old('exclude_nav', isset($page['exclude_nav']) ? 'true' : 'false' )}}"@endif>
-            @error('route')<p class="text-red-500 text-sm">{{ $message }}</p>@enderror
-        </div>
+       
+        <x-forms.input type="checkbox" name="exclude_nav" value="{{$page['exclude_nav']}}" />
+        
 
         <div class="mb-4 w-1/3" id="controllers" data-controllers="{{json_encode($controllers)}}">
             <label for="controller" class="block mb-2">Controller</label>

@@ -3,14 +3,13 @@
         "name": "prico-jobcoaching",
         "title": "PRICO Jobcoaching",
         "slug": "prico-jobcoaching",
-        "image_url": "/images/projects/prico_web.png"
+        "image_url": "storage/images/projects/prico_web.png"
     },
     {
         "name": "padel-connect",
         "title": "Padel Connect",
         "slug": "padel-connect",
         "intro": "Padel intro",
-        "image_url": "/images/projects/padelconnect_web.png",
-        "source": "storage"
+        "image_url": "storage/images/projects/padelconnect_web.png"
     }
 ]

@@ -17,7 +17,7 @@
 @section('content')
     @foreach ($parts as $part)
         @if ($part !== 'header' && $part !== 'footer')
-
+            
             @if(view()->exists('layouts.' . $part))
                 @include('layouts.' . $part, [$part => $content[$part]])
             @else
