@@ -2,164 +2,111 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Http\Controllers\Admin\AdminController as Controller;
+use App\Contracts\ProjectRepositoryInterface;
+use App\Services\PageContentService;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\File;
+use Illuminate\View\View;
 
-class ProjectController extends Controller
+class ProjectController extends AdminController
 {
+    // Inject the repository and service via the constructor
+    public function __construct(
+        private ProjectRepositoryInterface $projectRepository,
+        private PageContentService $contentService
+    ) {}
 
-    protected $projects;
-
-    public function __construct()
-    {
-        $this->projects = app('projects.data');
-    }
-    public function show(array $page) {}
     /**
-     * 
+     * Display a listing of the projects.
      */
-    private function getProjects(): array
+    public function index(): View
     {
-        return $this->projects;
-    }
-    /**
-     * 
-     */
-    private function saveProjects(array $projects): void
-    {
-        $options = JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES;
-        File::put(storage_path('app/public/json/projects.json'), json_encode($projects, $options));
-        Cache::forget('projects.json.data');
-    }
-    /**
-     * 
-     */
-    public function index(): \Illuminate\Contracts\View\View
-    {
-        $projects = $this->getProjects();
-        return view('admin.projects.index', compact('projects'));
-    }
-    /**
-     * 
-     */
-    private function getProjectIndex($projectName): int
-    {
-        $projects = $this->getProjects();
-        $project = collect($projects)->where('name', $projectName);
-        return array_keys($project->toArray())[0];
-    }
-    /**
-     * 
-     */
-    public function edit($projectName): \Illuminate\Contracts\View\View
-    {
-        $projects = $this->getProjects();
-        $project = collect($projects)->firstWhere('name', $projectName);
-
-        if (!$project) {
-            abort(404);
-        }
-        $header = $this->getMarkdownContent('header/projects',$project);
-        $content = $this->getMarkdownContent('content/projects',$project);
-        $footer = $this->getMarkdownContent('footer/projects',$project);
-        
-        return view('admin.projects.edit',[
-            'project' => $project,
-            'header' => $header,
-            'content' => $content,
-            'footer' => $footer
+        return view('admin.projects.index', [
+            'projects' => $this->projectRepository->all()
         ]);
     }
+
     /**
-     * 
+     * Show the form for creating a new project.
      */
-    public function update(Request $request, $projectName): \Illuminate\Http\RedirectResponse
-    {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'title' => 'required|string|max:255',
-            'slug' => 'string|max:255|nullable',
-            'source' => 'string|max:255|nullable',
-            'intro' => 'string|max:255|nullable',
-            'image_url' => 'string|max:255|nullable',
-        ]);
-
-        $projects = $this->getProjects();
-
-        $projectIndex = $this->getProjectIndex($projectName);
-        if ($projectIndex === false) {
-            abort(404);
-        }
-
-        $projects[$projectIndex]['name'] = $validated['name'];
-        $projects[$projectIndex]['title'] = $validated['title'];
-
-        $optionalFields = ['slug', 'source', 'intro', 'image_url',];
-        foreach ($optionalFields as $field) {
-            if (!empty($validated[$field])) {
-                $projects[$projectIndex][$field] = $validated[$field];
-            } else {
-                unset($projects[$projectIndex][$field]);
-            }
-        }
-
-        $this->saveProjects($projects);
-
-        return redirect()->route('admin.projects.index')->with('success', 'Project updated successfully!');
-    }
-    /**
-     * 
-     */
-    public function create(): \Illuminate\Contracts\View\View
+    public function create(): View
     {
         return view('admin.projects.create');
     }
+
     /**
-     * 
+     * Store a newly created project.
      */
-    public function store(Request $request): \Illuminate\Http\RedirectResponse
+    public function store(Request $request): RedirectResponse
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'title' => 'required|string|max:255',
-            'slug' => 'string|max:255|nullable',
-            'source' => 'string|max:255|nullable',
-            'intro' => 'string|max:255|nullable',
-            'image_url' => 'string|max:255|nullable',
+            'slug' => 'nullable|string|max:255',
+            'source' => 'nullable|string|max:255',
+            'intro' => 'nullable|string|max:255',
+            'image_url' => 'nullable|string|max:255',
         ]);
-        $projects = $this->getProjects();
-        if(in_array($validated['name'], array_column($projects,'name'))){
-            return redirect()->back()
-            ->withErrors(['name' => 'This name is already in use. Please choose a different one.'])
-            ->withInput();
-        }
-        if(in_array($validated['slug'], array_column($projects,'route'))){
-            return redirect()->back()
-            ->withErrors(['slug' => 'This route is already in use. Please choose a different one.'])
-            ->withInput();
-        }
-        $project = [];
-        $project['name'] = $validated['name'];
-        $project['title'] = $validated['title'];
-        $optionalFields = ['slug', 'source', 'intro', 'image_url',];
-        foreach ($optionalFields as $field) {
-            if (!empty($validated[$field])) {
-                $project[$field] = $validated[$field];
-            }
-        }
-        $projects[] = $project;
-        $this->saveProjects($projects);
-        return redirect()->route('admin.projects.index')->with('success', 'Project added successfully!');
 
+        // Check for duplicate name using the repository
+        if ($this->projectRepository->findBy('name', $validated['name'])) {
+            return redirect()->back()
+                ->withErrors(['name' => 'This name is already in use.'])
+                ->withInput();
+        }
+        
+        // Use the repository to create the new project
+        $this->projectRepository->create($validated);
+
+        return redirect()->route('admin.projects.index')->with('success', 'Project added successfully!');
     }
-    public function destroy(string $projectName)
+
+    /**
+     * Show the form for editing the specified project.
+     */
+    public function edit(string $projectName): View
     {
-        $projects = $this->getProjects();
-        $projectIndex = $this->getProjectIndex($projectName);
-        unset($projects[$projectIndex]);
-        $this->saveProjects($projects);
+        $project = $this->projectRepository->findBy('name', $projectName);
+        if (!$project) {
+            abort(404);
+        }
+        
+        return view('admin.projects.edit', [
+            'project' => $project,
+            'header' => $this->contentService->getMarkdownContent('header/projects', $project),
+            'content' => $this->contentService->getMarkdownContent('content/projects', $project),
+            'footer' => $this->contentService->getMarkdownContent('footer/projects', $project),
+        ]);
+    }
+
+    /**
+     * Update the specified project.
+     */
+    public function update(Request $request, string $projectName): RedirectResponse
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'title' => 'required|string|max:255',
+            'slug' => 'nullable|string|max:255',
+            'source' => 'nullable|string|max:255',
+            'intro' => 'nullable|string|max:255',
+            'image_url' => 'nullable|string|max:255',
+        ]);
+
+        // Use the repository to update the project
+        $this->projectRepository->update('name', $projectName, $validated);
+
+        return redirect()->route('admin.projects.index')->with('success', 'Project updated successfully!');
+    }
+
+    /**
+     * Remove the specified project.
+     */
+    public function destroy(string $projectName): RedirectResponse
+    {
+        // Use the repository to delete the project
+        $this->projectRepository->delete('name', $projectName);
+
         return redirect()->route('admin.projects.index')->with('success', 'Project removed successfully!');
     }
 }
