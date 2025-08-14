@@ -33,6 +33,11 @@ abstract class JsonRepository
         return collect($this->all())->firstWhere($key, $value);
     }
 
+    public function find(string $name): ?array
+    {
+        return collect($this->all())->firstWhere('name', $name);
+    }
+
     public function create(array $data): void
     {
         $items = $this->all();
@@ -40,7 +45,7 @@ abstract class JsonRepository
         $this->save($items);
     }
 
-    public function update(string $key, $value, array $data): bool
+    public function update(string $key, string $value, array $data): bool
     {
         $items = $this->all();
         $index = collect($items)->search(fn($item) => isset($item[$key]) && $item[$key] === $value);

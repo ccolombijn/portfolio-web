@@ -2,7 +2,7 @@
 
 namespace App\Contracts;
 
-interface ContactRepositoryInterface
+interface ContactRepositoryInterface extends RepositoryInterface
 {
     public function getDetails(): array;
 }

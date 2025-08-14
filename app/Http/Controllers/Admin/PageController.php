@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Contracts\PageRepositoryInterface;
-use App\Contracts\RepositoryInterface;
 use App\Services\PageContentService;
 use App\Services\PageFormOptionsService;
 use Illuminate\Http\RedirectResponse;
@@ -24,7 +23,7 @@ class PageController extends AdminController
     public function index(): View
     {
         return view('admin.pages.index', [
-            'pages' => $this->pageRepository->all()
+            'pages' => $this->pageRepository->all(),
         ]);
     }
 
@@ -60,14 +59,12 @@ class PageController extends AdminController
             'parts_order' => 'required|string',
         ]);
 
-        // Check for duplicate name
         if ($this->pageRepository->find($validated['name'])) {
             return redirect()->back()
                 ->withErrors(['name' => 'This name is already in use. Please choose a different one.'])
                 ->withInput();
         }
 
-        // Create the new page data array from validated data
         $newPage = [
             'name' => $validated['name'],
             'title' => $validated['title'],
@@ -145,7 +142,7 @@ class PageController extends AdminController
             ->values()
             ->all();
 
-        $this->pageRepository->update($pageName, $updateData);
+        $this->pageRepository->update('name', $pageName, $updateData);
         $page = $this->pageRepository->find($pageName); // Get the updated page data
         $this->contentService->savePartsForPage($request, $page);
 
@@ -157,7 +154,7 @@ class PageController extends AdminController
      */
     public function destroy(string $pageName): RedirectResponse
     {
-        $this->pageRepository->delete($pageName);
+        $this->pageRepository->delete('name', $pageName);
         // @todo : delete the associated markdown files here
         // using the PageContentService.
 

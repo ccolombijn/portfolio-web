@@ -6,7 +6,10 @@ use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\File;
 
 class PageFormOptionsService
-{
+{   
+    /**
+     * Get a list of all Controllers and their methods
+     */
     public function getControllers(): array
     {
         $controllers = [];
@@ -34,34 +37,34 @@ class PageFormOptionsService
         }
         return $controllers;
     }
-    /**
-     * 
-     */
-    public function getPageViews(): array
+    private function getViews(string $path): array
     {
         $views = [];
-        $path = resource_path('views/pages');
-    
-        if (!File::isDirectory($path)) {
+        $resourcePath = resource_path('views/' . $path);
+        if (!File::isDirectory($resourcePath)) {
             return [];
         }
     
-        foreach (File::files($path) as $file) {
+        foreach (File::files($resourcePath) as $file) {
             $viewName = basename($file->getFilename(), '.blade.php');
-            $views[] = 'pages.' . $viewName;
+            $views[] = str_replace('/', '.', $path) . '.' . $viewName;
         }
         
-        return $views;
+        return $views; 
     }
-
+    /**
+     * Get a list of all page views 
+     */
+    public function getPageViews(): array
+    {
+        return $this->getViews('pages');
+    }
+    /**
+     * Get a list of alle sections
+     */
     public function getSections(): array
     {
-        $sections = [];
-        $path = resource_path('views/components/sections');
-        foreach (File::files($path) as $file) {
-            $sections[] = basename($file->getFilename(), '.blade.php');
-        }
-        return $sections;
+        return $this->getViews('components/sections');
     }
     
     public function getSortedParts(array $pageParts = []): array

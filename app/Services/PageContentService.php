@@ -21,8 +21,8 @@ class PageContentService
     protected array $parts = ['header', 'content', 'footer'];
 
     /**
-     * The main method to get fully rendered HTML for a given page part.
-     * It orchestrates Pug/Markdown rendering, Blade component insertion, and image path processing.
+     * Main method to get fully rendered HTML for a given page part.
+     * Orchestrates Pug/Markdown rendering, Blade component insertion, and image path processing.
      */
     public function getRenderedPartContent(string $part, array $page): string
     {
@@ -177,7 +177,7 @@ class PageContentService
     }
 
     /**
-     * Converts a Markdown string to HTML.
+     * Converts Markdown string to HTML
      */
     private function convertMarkdownToHtml(string $markdown): string
     {

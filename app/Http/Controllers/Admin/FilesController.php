@@ -7,6 +7,7 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Storage;
+use \Illuminate\Contracts\Filesystem\Filesystem;
 use Spatie\Image\Image;
 use Spatie\ImageOptimizer\OptimizerChainFactory;
 
@@ -14,10 +15,11 @@ class FilesController extends Controller
 {
     protected $files;
 
-    public function __construct(\Illuminate\Contracts\Filesystem\Filesystem $files)
+    public function __construct(Filesystem $files)
     {
         $this->files = $files;
     }
+
     /**
      * 
      */
@@ -57,6 +59,7 @@ class FilesController extends Controller
         }
         return $files;
     }
+    
     /**
      * 
      */
@@ -99,7 +102,9 @@ class FilesController extends Controller
         $bytestotal = 0;
         $path = realpath($path);
         if($path!==false && $path!='' && file_exists($path)){
-            foreach(new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($path, \FilesystemIterator::SKIP_DOTS)) as $object){
+            foreach(new \RecursiveIteratorIterator(
+                new \RecursiveDirectoryIterator($path, 
+                \FilesystemIterator::SKIP_DOTS)) as $object){
                 $bytestotal += $object->getSize();
             }
         }
@@ -152,11 +157,11 @@ class FilesController extends Controller
             $optimizerChain = OptimizerChainFactory::create();
 
             foreach ($request->file('files_to_upload') as $file) {
-                $savedRelativePath = $file->storeAs($path, $file->getClientOriginalName(), 'public');
+                $savedRelativePath = $file->storeAs($path, $file->getClientOriginalName(), 'public'); // Save original
                 $physicalPath = Storage::disk('public')->path($savedRelativePath);
-                $optimizerChain->optimize($physicalPath);
+                $optimizerChain->optimize($physicalPath); // Optimize
                 $webpPath = pathinfo($physicalPath, PATHINFO_DIRNAME) . '/' . pathinfo($physicalPath, PATHINFO_FILENAME) . '.webp';
-                Image::load($physicalPath)->save($webpPath);
+                Image::load($physicalPath)->save($webpPath); // Save as webp
             }
 
         }
@@ -182,6 +187,7 @@ class FilesController extends Controller
         return redirect()->route('admin.files.index',['path' => $redirect_path])->with('success', 'File ' . $file_name . ' removed');
 
     }
+
     /**
      * 
      */
