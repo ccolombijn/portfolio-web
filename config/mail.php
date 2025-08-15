@@ -115,4 +115,15 @@ return [
         'name' => env('MAIL_FROM_NAME', 'Example'),
     ],
 
+/*
+    |--------------------------------------------------------------------------
+    | Contact Form Recipient
+    |--------------------------------------------------------------------------
+    |
+    | The default email address that receives submissions from the
+    | public contact form.
+    |
+    */
+    'contact_form_recipient' => env('CONTACT_FORM_RECIPIENT', 'your-default-email@example.com'),
+
 ];

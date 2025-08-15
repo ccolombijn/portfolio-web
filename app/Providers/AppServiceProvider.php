@@ -32,18 +32,19 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        $this->app->singleton(PageRepositoryInterface::class, JsonPageRepository::class);
-        $this->app->singleton(ProjectRepositoryInterface::class, JsonProjectRepository::class);
-        $this->app->singleton(ContactRepositoryInterface::class, JsonContactRepository::class);
         $this->app->singleton(FileManagerInterface::class, StorageFileManagerRepository::class);
     
 
 
-        // if (config('app.data_source') === 'database') {
+        if (config('app.data_source') === 'database') {
         //     $this->app->singleton(RepositoryInterface::class, DatabasePageRepository::class);
-        // } else {
-        //     $this->app->singleton(RepositoryInterface::class, JsonPageRepository::class);
-        // }
+        } else {
+            $this->app->singleton(PageRepositoryInterface::class, JsonPageRepository::class);
+            $this->app->singleton(ProjectRepositoryInterface::class, JsonProjectRepository::class);
+            $this->app->singleton(ContactRepositoryInterface::class, JsonContactRepository::class);
+        
+            //     $this->app->singleton(RepositoryInterface::class, JsonPageRepository::class);
+        }
         $sources = [
             'pages',
             'content',

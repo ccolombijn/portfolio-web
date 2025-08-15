@@ -55,7 +55,7 @@ class ContactController extends Controller
         ]);
 
         $contactDetails = $this->contactRepository->getDetails();
-        $recipientEmail = $contactDetails['email'] ?? 'default-recipient@example.com';
+        $recipientEmail = $contactDetails['email'] ?? config('mail.contact_form_recipient');
 
         Mail::to($recipientEmail)->send(new ContactFormMail($validated));
 

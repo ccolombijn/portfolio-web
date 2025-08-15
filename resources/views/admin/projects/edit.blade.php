@@ -32,7 +32,7 @@
         <div class="mb-4">
             <label for="image_url" class="block mb-2">Image</label>
             <div class="image_select p-3 rounded cursor-pointer shadow flex items-center border border-stone-300 hover:bg-sky-100" data-storage-url="{{url('storage/')}}">
-                <img src="{{url('storage/' . $project['image_url'])}}" style="height:100px;" class="image_select__thumb pr-4" />
+                <img src="{{url($project['image_url'])}}" style="height:100px;" class="image_select__thumb pr-4" />
                 <span class="image_select__label">{{$project['image_url']}}</span>
             </div>
             <input type="hidden" name="image_url" id="image_url" value="{{ old('image_url', isset($project['image_url']) ? $project['image_url'] : '') }}" class="w-full p-2 border border-stone-300 rounded shadow">
