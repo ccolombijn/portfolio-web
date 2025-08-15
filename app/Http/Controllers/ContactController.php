@@ -30,7 +30,7 @@ class ContactController extends Controller
         if (!$page) abort(404);
 
         $contentData = [];
-        $parts = $page['parts'] ?? ['header', 'content', 'footer'];
+        $parts = $page['parts'] ?? config('page.default_parts');
         foreach ($parts as $part) {
             $contentData[$part] = $this->pageContentService->getRenderedPartContent($part, $page);
         }

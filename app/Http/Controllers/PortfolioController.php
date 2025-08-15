@@ -8,12 +8,14 @@ use Illuminate\Contracts\View\View;
 
 class PortfolioController extends Controller
 {
-    protected array $parts = ['header', 'content', 'footer'];
+    protected array $parts;
 
     public function __construct(
         private ProjectRepositoryInterface $projectRepository,
         private PageContentService $pageContentService
-    ) {}
+    ) {
+        $this->parts = config('page.default_parts');
+    }
 
     /**
      * Display the portfolio overview page.

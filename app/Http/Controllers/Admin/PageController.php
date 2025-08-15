@@ -33,7 +33,7 @@ class PageController extends AdminController
     public function create(): View
     {
         // Default parts for a new page
-        $defaultParts = ['header', 'content', 'footer'];
+        $defaultParts = config('page.default_parts');
 
         return view('admin.pages.create', [
             'controllers' => $this->formOptionsService->getControllers(),
@@ -104,7 +104,7 @@ class PageController extends AdminController
             abort(404);
         }
 
-        $pageParts = $page['parts'] ?? ['header', 'content', 'footer'];
+        $pageParts = $page['parts'] ?? config('page.default_parts');
         $header = $this->contentService->getMarkdownContent('header', $page);
         $content = $this->contentService->getMarkdownContent('content', $page);
         $footer = $this->contentService->getMarkdownContent('footer', $page);

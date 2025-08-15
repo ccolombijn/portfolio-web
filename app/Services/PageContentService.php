@@ -18,20 +18,25 @@ class PageContentService
      * The default parts to look for when saving page content.
      * @var string[]
      */
-    protected array $parts = ['header', 'content', 'footer'];
+    protected array $parts;
+
+    public function __construct()
+    {
+        $this->parts = config('page.default_parts');
+    }
 
     /**
      * Main method to get fully rendered HTML for a given page part.
-     * Orchestrates Pug/Markdown rendering, Blade component insertion, and image path processing.
+     * Pug/Markdown rendering, Blade component insertion, and image path processing.
      */
     public function getRenderedPartContent(string $part, array $page): string
     {
         $output = '';
 
         if (in_array($part, $this->parts)) {
-            $output = $this->renderPug($part, $page);
+            $output = $this->renderPug($part, $page); // First try to get pug if available
             if (is_null($output)) {
-                $output = $this->getMarkdownContent($part, $page);
+                $output = $this->getMarkdownContent($part, $page); // Fallback to markdown
             }
         } else {
             $componentView = 'components.sections.' . $part;

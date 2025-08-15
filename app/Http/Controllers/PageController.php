@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Contracts\PageRepositoryInterface;
 use App\Services\PageContentService;
+use \Illuminate\Contracts\View\View;
 
 class PageController extends Controller
 {
@@ -13,7 +13,7 @@ class PageController extends Controller
     /**
      * Returns default page view
      */
-    public function show(array $page): \Illuminate\Contracts\View\View
+    public function show(array $page): View
     {
 
         if (!$page) {
@@ -21,7 +21,7 @@ class PageController extends Controller
         }
 
         $content = [];
-        $parts = $page['parts'] ?? ['header', 'content', 'footer'];
+        $parts = $page['parts'] ?? config('page.default_parts');
         
         foreach ($parts as $part) { 
             $content[$part] = $this->pageContentService->getRenderedPartContent($part, $page);
