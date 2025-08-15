@@ -37,7 +37,7 @@ class PageFormOptionsService
         }
         return $controllers;
     }
-    private function getViews(string $path): array
+    private function getViews(string $path, bool $fullPath = true): array
     {
         $views = [];
         $resourcePath = resource_path('views/' . $path);
@@ -47,7 +47,7 @@ class PageFormOptionsService
     
         foreach (File::files($resourcePath) as $file) {
             $viewName = basename($file->getFilename(), '.blade.php');
-            $views[] = str_replace('/', '.', $path) . '.' . $viewName;
+            $views[] = $fullPath ? str_replace('/', '.', $path) . '.' . $viewName : $viewName;
         }
         
         return $views; 
@@ -64,7 +64,7 @@ class PageFormOptionsService
      */
     public function getSections(): array
     {
-        return $this->getViews('components/sections');
+        return $this->getViews('components/sections', false);
     }
     
     public function getSortedParts(array $pageParts = []): array

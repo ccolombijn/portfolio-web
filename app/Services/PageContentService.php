@@ -110,7 +110,7 @@ class PageContentService
     /**
      * Gets raw markdown content using the fallback path logic.
      */
-    public function getMarkdownContent(string $part, array $page): string
+    public function getMarkdownContent(string $part, array $page = [ 'name' => 'default']): string
     {
         $filePath = $this->getMarkdownPath($part, $page);
         return empty($filePath) ? '' : File::get($filePath);

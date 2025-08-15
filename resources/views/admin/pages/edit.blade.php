@@ -32,7 +32,7 @@
         </div>
 
        
-        <x-forms.input type="checkbox" name="exclude_nav" value="{{$page['exclude_nav']}}" />
+        <x-forms.input type="checkbox" name="exclude_nav" value="{{isset($page['exclude_nav'])}}" />
         
 
         <div class="mb-4 w-1/3" id="controllers" data-controllers="{{json_encode($controllers)}}">

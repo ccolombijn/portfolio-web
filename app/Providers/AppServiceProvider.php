@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Contracts\ContactRepositoryInterface;
+use App\Contracts\FileManagerInterface;
 use App\Contracts\PageRepositoryInterface;
 use App\Contracts\ProjectRepositoryInterface;
 use App\Http\Controllers\Admin\DashboardController;
@@ -18,6 +19,7 @@ use App\Http\Controllers\ContactController;
 use App\Repositories\JsonContactRepository;
 use App\Repositories\JsonPageRepository;
 use App\Repositories\JsonProjectRepository;
+use App\Repositories\StorageFileManagerRepository;
 use Illuminate\Support\Facades\Storage;
 
 
@@ -33,6 +35,8 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(PageRepositoryInterface::class, JsonPageRepository::class);
         $this->app->singleton(ProjectRepositoryInterface::class, JsonProjectRepository::class);
         $this->app->singleton(ContactRepositoryInterface::class, JsonContactRepository::class);
+        $this->app->singleton(FileManagerInterface::class, StorageFileManagerRepository::class);
+    
 
 
         // if (config('app.data_source') === 'database') {

@@ -40,6 +40,9 @@ class PageController extends AdminController
             'views' => $this->formOptionsService->getPageViews(),
             'sorted_sections' => $this->formOptionsService->getSortedParts($defaultParts),
             'selected_parts' => $defaultParts,
+            'header' => $this->contentService->getMarkdownContent('header'),
+            'content' => $this->contentService->getMarkdownContent('content'),
+            'footer' => $this->contentService->getMarkdownContent('footer'),
         ]);
     }
 
@@ -102,14 +105,17 @@ class PageController extends AdminController
         }
 
         $pageParts = $page['parts'] ?? ['header', 'content', 'footer'];
-        $header = $this->contentService->getRenderedPartContent('header', $page);
-        $content = $this->contentService->getRenderedPartContent('content', $page);
-        $footer = $this->contentService->getRenderedPartContent('footer', $page);
+        $header = $this->contentService->getMarkdownContent('header', $page);
+        $content = $this->contentService->getMarkdownContent('content', $page);
+        $footer = $this->contentService->getMarkdownContent('footer', $page);
+
+        $sortedSections = $this->formOptionsService->getSortedParts($pageParts);
+        //dd($sortedSections);
         return view('admin.pages.edit', [
             'page' => $page,
             'controllers' => $this->formOptionsService->getControllers(),
             'views' => $this->formOptionsService->getPageViews(),
-            'sorted_sections' => $this->formOptionsService->getSortedParts($pageParts),
+            'sorted_sections' => $sortedSections,
             'selected_parts' => $pageParts,
             'header' => $header,
             'content' => $content,
