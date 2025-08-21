@@ -30,7 +30,7 @@
     {
         "name": "portfolio.project",
         "title": "Project Detail",
-        "route": "/portfolio/{projectName}",
+        "route": "/portfolio/{project}",
         "controller": "PortfolioController",
         "method": "project",
         "exclude_nav": true

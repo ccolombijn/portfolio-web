@@ -15,7 +15,7 @@ foreach (collect(app('pages.data'))->all() as $page) {
         ? 'App\\Http\\Controllers\\' . $page['controller'] . '@' . ($page['method'] ?? 'show')
         : [PageController ::class, 'show'];
 
-    $routeName = $page['name'] . (isset($page['method']) ? '.' . $page['method'] : '');
+    $routeName = $page['name'] . (isset($page['method']) && str_contains($page['method'], '.') ? '.' . $page['method'] : '');
 
     $routePath = $page['route'] ?? '/' . $page['name'];
     Route::get($routePath, $controllerAction)

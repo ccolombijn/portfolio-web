@@ -11,7 +11,7 @@
 
 Leuk dat je langskomt. Mijn site is even offline, omdat deze  in ontwikkeling is<br><br>
 
-Achter de schermen werk ik hard aan de inhoud voor de nieuwe site. Je vindt hier dus een hele nieuwe versie vanaf 18/08/2025!<br><br>
+Achter de schermen werk ik hard aan de inhoud voor de nieuwe site.<br><br>
 
 Wil je contact opnemen? Leuk! Dan kun je mailen naar <a href="mailto:ccolombijn@gmail.com">ccolombijn@gmail.com</a><br><br>
 

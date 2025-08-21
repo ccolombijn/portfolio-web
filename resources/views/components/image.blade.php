@@ -23,7 +23,7 @@
         $pathInStorage = ltrim($src, '/');
         $physicalPath = storage_path('app/public/' . $pathInStorage);
         
-        $fallbackUrl = asset('storage/' . $pathInStorage);
+        $fallbackUrl = asset($pathInStorage);
     }
 
     if (!empty($fallbackUrl)) {

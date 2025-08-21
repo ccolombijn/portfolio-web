@@ -79,7 +79,7 @@ class AppServiceProvider extends ServiceProvider
         $pagesData = $this->app->make('pages.data');
         $contentData = $this->app->make('content.data');
         $navigationItems = collect($pagesData)->map(function ($page) {
-            $page['routeName'] = isset($page['method'])
+            $page['routeName'] = isset($page['method']) && str_contains($page['method'], '.')
                 ? $page['name'] . '.' . $page['method']
                 : $page['name'];
             return $page;
