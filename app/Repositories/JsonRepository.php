@@ -18,6 +18,10 @@ abstract class JsonRepository
         $this->cacheKey = "{$this->sourceName}.json.data";
     }
 
+    /**
+     * Get all items, using cache to avoid repeated file reads.
+     * @return array
+     */
     public function all(): array
     {
         return Cache::rememberForever($this->cacheKey, function () {
@@ -28,7 +32,7 @@ abstract class JsonRepository
         });
     }
 
-    public function findBy(string $key, $value): ?array
+    public function findBy(string $key, string $value): ?array
     {
         return collect($this->all())->firstWhere($key, $value);
     }
@@ -60,7 +64,7 @@ abstract class JsonRepository
         return true;
     }
 
-    public function delete(string $key, $value): bool
+    public function delete(string $key, string $value): bool
     {
         $items = $this->all();
         $originalCount = count($items);

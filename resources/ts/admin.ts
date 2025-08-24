@@ -1,9 +1,9 @@
 //import { form } from "./form";
-import { imgSelect } from "./imgSelect";
-import { table } from "./table";
-import { upload } from "./upload";
-import { page } from "./page";
-import { initializeFilePreviews } from "./preview";
+import { imgSelect } from "./admin/imgSelect";
+import { table } from "./admin/table";
+import { upload } from "./admin/upload";
+import { page } from "./admin/page";
+import { initializeFilePreviews } from "./admin/preview";
 //form();
 imgSelect();
 table();

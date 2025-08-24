@@ -6,7 +6,6 @@ use App\Contracts\FileManagerInterface;
 use App\Services\FileProcessingService;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Http\UploadedFile;
 
 class StorageFileManagerRepository implements FileManagerInterface
 {

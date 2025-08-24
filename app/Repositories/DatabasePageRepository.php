@@ -35,22 +35,30 @@ class DatabasePageRepository implements RepositoryInterface
     }
 
     /**
+     * Find a specific page by its name from the cached collection.
+     */
+    public function findBy(string $key, string $value): ?array
+    {
+        return collect($this->all())->firstWhere($key, $value);
+    }
+
+    /**
      * Create a new page in the database and clear the cache.
      */
     public function create(array $data): void
     {
         Page::create($data);
 
-        // Clear the cache so the new page appears on the next request.
         Cache::forget($this->cacheKey);
     }
 
     /**
      * Update a page in the database and clear the cache.
+     * @return bool
      */
-    public function update(string $name, array $data): bool
+    public function update(string $key, string $value, array $data): bool
     {
-        $page = Page::where('name', $name)->first();
+        $page = Page::where($key, $value)->first();
 
         if (!$page) {
             return false;
@@ -58,7 +66,6 @@ class DatabasePageRepository implements RepositoryInterface
 
         $updated = $page->update($data);
 
-        // If the update was successful, clear the cache.
         if ($updated) {
             Cache::forget($this->cacheKey);
         }
@@ -69,9 +76,9 @@ class DatabasePageRepository implements RepositoryInterface
     /**
      * Delete a page from the database and clear the cache.
      */
-    public function delete(string $name): bool
+    public function delete(string $key, string $value): bool
     {
-        $page = Page::where('name', 'like', $name)->first();
+        $page = Page::where($key, 'like', $value)->first();
 
         if (!$page) {
             return false;
@@ -79,7 +86,6 @@ class DatabasePageRepository implements RepositoryInterface
 
         $deleted = $page->delete();
 
-        // If the deletion was successful, clear the cache.
         if ($deleted) {
             Cache::forget($this->cacheKey);
         }

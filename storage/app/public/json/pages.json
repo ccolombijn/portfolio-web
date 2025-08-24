@@ -9,7 +9,10 @@
             "content",
             "cta",
             "footer"
-        ]
+        ],
+        "controller": "PageController",
+        "method": "show",
+        "view": "pages.default"
     },
     {
         "name": "about",
@@ -25,7 +28,11 @@
         "route": "/portfolio",
         "controller": "PortfolioController",
         "method": "index",
-        "parts": ["header", "content", "footer"]
+        "parts": [
+            "header",
+            "content",
+            "footer"
+        ]
     },
     {
         "name": "portfolio.project",

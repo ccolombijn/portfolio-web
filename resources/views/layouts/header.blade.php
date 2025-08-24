@@ -1,4 +1,4 @@
-<section class="header @if(isset($name))header--{{$name}}@endif">
+<section class="header @if(isset($part))header--{{$part}}@endif">
     <div class="header__container">
         <h1 class="header__title"><a href="{{ route('home') }}" aria-label="Ga naar homepage"><span>{{ env('APP_NAME')}}</span></a></h1>
         @include('navigation.nav')

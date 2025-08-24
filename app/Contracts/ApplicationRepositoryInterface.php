@@ -3,5 +3,5 @@ namespace App\Contracts;
 
 interface ApplicationRepositoryInterface extends RepositoryInterface
 {
-    // custom methods
+    // ...
 }

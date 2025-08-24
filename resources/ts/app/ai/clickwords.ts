@@ -1,4 +1,4 @@
-import { fetchStream } from "../fetchStream";
+import { fetchStream } from '../fetchStream';
 import loadingGifUrl from '../../images/loading.gif';
 /**
  * Sends textContent of elements with .click-me with fetchStream to backend

@@ -1,9 +1,9 @@
-import { headerBackgroundEffects } from "./headerBackgroundEffects";
-import { aiClickwords } from "./ai/clickwords";
-import { aiSummarize } from "./ai/summarize";
-import { form } from "./form";
-import { image } from "./image";
-import { navResponsive } from "./navResponsive";
+import { headerBackgroundEffects } from "./app/headerBackgroundEffects";
+import { aiClickwords } from "./app/ai/clickwords";
+import { aiSummarize } from "./app/ai/summarize";
+import { form } from "./app/form";
+import { image } from "./app/image";
+import { navResponsive } from "./app/navResponsive";
 import.meta.glob([
     '../images/**',
 ]);

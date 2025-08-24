@@ -189,7 +189,8 @@ class PageContentService
         $environment = new Environment(['html_input' => 'allow', 'allow_unsafe_links' => false]);
         $environment->addExtension(new CommonMarkCoreExtension());
         $converter = new MarkdownConverter($environment);
-        return $converter->convert($markdown)->getContent();
+        $output = $converter->convert($markdown)->getContent();
+        return $output;
     }
 
     /**

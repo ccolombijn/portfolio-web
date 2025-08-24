@@ -19,7 +19,6 @@ class PortfolioController extends Controller
 
     /**
      * Display the portfolio overview page.
-     * The $page array is passed automatically by your dynamic router.
      */
     public function index(array $page): View
     {
@@ -30,11 +29,10 @@ class PortfolioController extends Controller
             'page' => $page,
             'items' => $projects,
             'name' => 'portfolio',
-            'route' => 'portfolio.project', // Route name for detail links
-            'key' => 'project',              // The key to use for the route parameter (e.g., project's name)
+            'route' => 'portfolio.project',
+            'key' => 'project',
         ];
 
-        // Render the main page parts (header, content, footer)
         foreach ($this->parts as $part) { 
             $data[$part] = $this->pageContentService->getRenderedPartContent($part, $page);
         }
@@ -55,9 +53,11 @@ class PortfolioController extends Controller
             abort(404);
         }
 
-        $project['header'] = $this->pageContentService->getRenderedPartContent('header/projects', $project);
-        $project['description'] = $this->pageContentService->getRenderedPartContent('content/projects', $project);
-
+        $project['header'] = $this->pageContentService
+            ->getRenderedPartContent('header/projects', $project);
+        $project['description'] = $this->pageContentService
+            ->getRenderedPartContent('content/projects', $project);
+        $project['part'] = 'portfolio';
         $data = [
             'item' => (object) $project,
             'name' => 'portfolio'
@@ -69,5 +69,5 @@ class PortfolioController extends Controller
 
         return view('pages.detail', $data);
     }
-    
+
 }
