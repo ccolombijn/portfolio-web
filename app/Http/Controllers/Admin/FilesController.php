@@ -9,17 +9,15 @@ use Illuminate\Http\RedirectResponse;
 
 class FilesController extends AdminController
 {
-    public function __construct(private FileManagerInterface $fileManager)
-    {
-    }
+    public function __construct(private FileManagerInterface $fileManager) {}
 
     public function index(string $path = ''): View
     {
         $contents = $this->fileManager->listContents($path);
-        
+
         // Logic to determine if we are viewing a file or a folder
         $extension = pathinfo($path, PATHINFO_EXTENSION);
-        
+
         if (!empty($path) && !empty($extension)) {
             $fileDetails = $this->fileManager->getFileDetails($path);
             if (!$fileDetails) abort(404);
@@ -32,7 +30,7 @@ class FilesController extends AdminController
         ]);
     }
 
-    public function uploadForm(string $path = ''): View
+    public function upload(string $path = ''): View
     {
         return view('admin.files.upload', ['path' => $path ?: '.']);
     }
@@ -55,7 +53,7 @@ class FilesController extends AdminController
     public function destroy(string $path): RedirectResponse
     {
         $this->fileManager->delete($path);
-        
+
         // Redirect to the parent directory
         $parentPath = dirname($path);
         $redirectPath = ($parentPath === '.' || $parentPath === '/') ? '' : $parentPath;
