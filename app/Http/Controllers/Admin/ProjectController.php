@@ -10,7 +10,7 @@ use Illuminate\View\View;
 
 class ProjectController extends AdminController
 {
-    // Inject the repository and service via the constructor
+
     public function __construct(
         private ProjectRepositoryInterface $projectRepository,
         private PageContentService $contentService
@@ -18,6 +18,7 @@ class ProjectController extends AdminController
 
     /**
      * Display a listing of the projects.
+     * @return View
      */
     public function index(): View
     {
@@ -28,6 +29,7 @@ class ProjectController extends AdminController
 
     /**
      * Show the form for creating a new project.
+     * @return View
      */
     public function create(): View
     {
@@ -36,6 +38,8 @@ class ProjectController extends AdminController
 
     /**
      * Store a newly created project.
+     * @param Request $request
+     * @return RedirectResponse
      */
     public function store(Request $request): RedirectResponse
     {
@@ -48,14 +52,12 @@ class ProjectController extends AdminController
             'image_url' => 'nullable|string|max:255',
         ]);
 
-        // Check for duplicate name using the repository
         if ($this->projectRepository->findBy('name', $validated['name'])) {
             return redirect()->back()
                 ->withErrors(['name' => 'This name is already in use.'])
                 ->withInput();
         }
-        
-        // Use the repository to create the new project
+
         $this->projectRepository->create($validated);
 
         return redirect()->route('admin.projects.index')->with('success', 'Project added successfully!');
@@ -81,6 +83,9 @@ class ProjectController extends AdminController
 
     /**
      * Update the specified project.
+     * @param Request $request
+     * @param string $projectName
+     * @return RedirectResponse
      */
     public function update(Request $request, string $projectName): RedirectResponse
     {
@@ -92,8 +97,12 @@ class ProjectController extends AdminController
             'intro' => 'nullable|string|max:255',
             'image_url' => 'nullable|string|max:255',
         ]);
-
-        // Use the repository to update the project
+        $existingProject = $this->projectRepository->findBy('name', $validated['name']);
+        if ($existingProject && $existingProject['name'] !== $projectName) {
+            return redirect()->back()
+                ->withErrors(['name' => 'This name is already in use.'])
+                ->withInput();
+        }
         $this->projectRepository->update('name', $projectName, $validated);
 
         return redirect()->route('admin.projects.index')->with('success', 'Project updated successfully!');
@@ -101,10 +110,12 @@ class ProjectController extends AdminController
 
     /**
      * Remove the specified project.
+     * @param string $projectName
+     * @return RedirectResponse
      */
     public function destroy(string $projectName): RedirectResponse
     {
-        // Use the repository to delete the project
+
         $this->projectRepository->delete('name', $projectName);
 
         return redirect()->route('admin.projects.index')->with('success', 'Project removed successfully!');

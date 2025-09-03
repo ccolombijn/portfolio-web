@@ -23,6 +23,8 @@ class FileProcessingService
 
     /**
      * Recursively gets the size of a directory.
+     * @param string $path The path to the directory.
+     * @return int The total size of the directory in bytes.
      */
     public function getDirectorySize(string $path): int
     {
@@ -40,6 +42,10 @@ class FileProcessingService
 
     /**
      * Formats a file size in bytes to a human-readable string.
+     * @param int $bytes The size in bytes.
+     * @param int $decimals Number of decimal places to include in the output.
+     * @return string The formatted file size, e.g., "1.23 MB", "456 KB", etc.
+     * @throws \InvalidArgumentException if $bytes is negative.
      */
     public function formatFileSize(int $bytes, int $decimals = 2): string
     {
@@ -51,6 +57,9 @@ class FileProcessingService
 
     /**
      * Stores an uploaded file, optimizes it, and creates a WebP version.
+     * @param UploadedFile $file The uploaded file to process.
+     * @param string $savePath The path where the file should be saved, relative to the public disk.
+     * @return void
      */
     public function optimizeAndConvert(UploadedFile $file, string $savePath): void
     {

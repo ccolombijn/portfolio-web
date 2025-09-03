@@ -1,5 +1,6 @@
 import { fetchStream } from "../fetchStream";
-import loadingGifUrl from '../../images/loading.gif';
+import loadingGifUrl from '../../../images/loading.gif';
+
 /**
  * Summarize page with AI
  * @returns {void}

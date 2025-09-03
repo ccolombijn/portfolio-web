@@ -6,9 +6,11 @@ use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\File;
 
 class PageFormOptionsService
-{   
+{
+
     /**
-     * Get a list of all Controllers and their methods
+     * Get a list of all controllers and their methods that return views
+     * @return array
      */
     public function getControllers(): array
     {
@@ -37,6 +39,13 @@ class PageFormOptionsService
         }
         return $controllers;
     }
+
+    /**
+     * Get a list of all views in a given path
+     * @param string $path The path to the views directory relative to resources/views
+     * @param bool $fullPath Whether to return the full view name (with dots) or just the filename
+     * @return array
+     */
     private function getViews(string $path, bool $fullPath = true): array
     {
         $views = [];
@@ -44,7 +53,7 @@ class PageFormOptionsService
         if (!File::isDirectory($resourcePath)) {
             return [];
         }
-    
+
         foreach (File::files($resourcePath) as $file) {
             $viewName = basename($file->getFilename(), '.blade.php');
             $views[] = $fullPath ? str_replace('/', '.', $path) . '.' . $viewName : $viewName;
@@ -52,15 +61,19 @@ class PageFormOptionsService
         
         return $views; 
     }
+
     /**
-     * Get a list of all page views 
+     * Get a list of all page views
+     * @return array
      */
     public function getPageViews(): array
     {
         return $this->getViews('pages');
     }
+
     /**
-     * Get a list of alle sections
+     * Get a list of alle section components
+     * @return array	
      */
     public function getSections(): array
     {

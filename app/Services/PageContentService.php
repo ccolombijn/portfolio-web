@@ -28,6 +28,13 @@ class PageContentService
     /**
      * Main method to get fully rendered HTML for a given page part.
      * Pug/Markdown rendering, Blade component insertion, and image path processing.
+     * @throws \Exception If rendering or file operations fail.
+     * @return string The final rendered HTML content for the specified part.
+     * @see renderPug()
+     * @see getMarkdownContent()
+     * @see insertComponents()
+     * @see convertMarkdownToHtml()
+     * @see processImagePathsInHtml()
      */
     public function getRenderedPartContent(string $part, array $page): string
     {
@@ -54,6 +61,12 @@ class PageContentService
     /**
      * Saves the markdown content for a page, only creating a specific file
      * if its content differs from the default.
+     * @param Request $request The incoming request containing form data.
+     * @param array $page The page data array, must include 'name' key.
+     * @throws \Illuminate\Contracts\Filesystem\FileNotFoundException
+     * @throws \Exception
+     * @see getMarkdownContent()
+     * @see getMarkdownPath()
      */
     public function savePartsForPage(Request $request, array $page): void
     {
@@ -82,6 +95,10 @@ class PageContentService
 
     /**
      * Finds and renders a Pug file for a given part and page, with fallbacks.
+     * Returns null if no Pug file is found.
+     * @throws \Exception If Pug rendering fails.
+     * @return string|null The rendered HTML or null if no Pug file is found.
+     * @see getRenderedPartContent()
      */
     private function renderPug(string $part, array $page): ?string
     {
@@ -123,6 +140,12 @@ class PageContentService
 
     /**
      * Finds the correct path for a markdown file, checking storage then resources.
+     * Returns empty string if no file is found.
+     * @return string The path to the markdown file or empty string if not found.
+     * @throws \Illuminate\Contracts\Filesystem\FileNotFoundException
+     * @throws \Exception
+     * @see getMarkdownContent()
+     * 
      */
     private function getMarkdownPath(string $part, array $page): string 
     {
@@ -142,6 +165,10 @@ class PageContentService
 
     /**
      * Inserts Blade components into a string.
+     * Components are denoted by {componentName attr1="value1" attr2="value2" ...}
+     * Example: {hero title="Welcome" subtitle="Enjoy your stay"}
+     * @throws \Exception If the component view does not exist.
+     * @return string The content with components rendered.
      */
     private function insertComponents(string $content): string
     {
@@ -167,6 +194,11 @@ class PageContentService
 
     /**
      * Parses a string of HTML-like attributes into an associative array.
+     * Example input: attr1="value1" attr2='value2' attr3=value3
+     * Example output: ['attr1' => 'value1', 'attr2' => 'value2', 'attr3' => 'value3']
+     * @return array The parsed attributes as key-value pairs.
+     * @see insertComponents()
+     * @throws \Exception If attribute parsing fails.
      */
     private function parseAttributes(string $str): array
     {
@@ -183,6 +215,12 @@ class PageContentService
 
     /**
      * Converts Markdown string to HTML
+     * Uses League\CommonMark for conversion.
+     * @param string $markdown The markdown content to convert.
+     * @return string The converted HTML content.
+     * @throws \Exception If the conversion fails.
+     * @see getRenderedPartContent()
+     * @see insertComponents()
      */
     private function convertMarkdownToHtml(string $markdown): string
     {
@@ -195,6 +233,12 @@ class PageContentService
 
     /**
      * Replaces static image paths in final HTML with Vite asset paths and adds dimensions.
+     * This is specifically for images stored in the resources/images directory.
+     * It assumes images are referenced in the format <img src="/images/filename.ext" ...>
+     * @param string $htmlContent The HTML content to process.
+     * @return string The processed HTML content with updated image paths.
+     * @throws \Exception If the image file does not exist.
+     * @see getRenderedPartContent()
      */
     private function processImagePathsInHtml(string $htmlContent): string 
     {

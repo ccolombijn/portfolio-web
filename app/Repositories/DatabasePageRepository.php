@@ -16,6 +16,10 @@ class DatabasePageRepository implements RepositoryInterface
 
     /**
      * Get all pages, using a cache to avoid repeated database queries.
+     * This method retrieves all pages from the database and caches them indefinitely.
+     * If the cache is empty, it fetches all pages from the database and returns them as an array.
+     * @return array
+     * @throws \Illuminate\Contracts\Cache\LockTimeoutException
      */
     public function all(): array
     {
@@ -27,6 +31,10 @@ class DatabasePageRepository implements RepositoryInterface
 
     /**
      * Find a specific page by its name from the cached collection.
+     * This method uses the cached result from 'all()' to find a page by its name.
+     * It returns the first page that matches the given name, or null if no match is found.
+     * @param string $name
+     * @return array|null
      */
     public function find(string $name): ?array
     {
@@ -36,6 +44,12 @@ class DatabasePageRepository implements RepositoryInterface
 
     /**
      * Find a specific page by its name from the cached collection.
+     * This method uses the cached result from 'all()' to find a page by a specific key and value.
+     * It returns the first page that matches the given key and value, or null if no match is found.
+     * @param string $key The key to search by (e.g., 'slug', 'id').
+     * @param string $value The value to match against the key.
+     * @return array|null
+     * @throws \Illuminate\Contracts\Cache\LockTimeoutException
      */
     public function findBy(string $key, string $value): ?array
     {
@@ -44,17 +58,27 @@ class DatabasePageRepository implements RepositoryInterface
 
     /**
      * Create a new page in the database and clear the cache.
+     * This method accepts an array of data to create a new page.
+     * After creating the page, it clears the cache to ensure the next call to 'all()' retrieves the latest data.
+     * @param array $data An associative array containing the page data.
+     * @return void
+     * @throws \Illuminate\Contracts\Cache\LockTimeoutException
      */
     public function create(array $data): void
     {
         Page::create($data);
-
         Cache::forget($this->cacheKey);
     }
 
     /**
      * Update a page in the database and clear the cache.
+     * This method finds a page by a specific key and value, updates it with the provided data,	
+     * and clears the cache if the update is successful.
+     * @param string $key The key to search by (e.g., 'slug', 'id').
+     * @param string $value The value to match against the key.
+     * @param array $data An associative array containing the updated page data.
      * @return bool
+     * @throws \Illuminate\Contracts\Cache\LockTimeoutException
      */
     public function update(string $key, string $value, array $data): bool
     {
@@ -75,6 +99,12 @@ class DatabasePageRepository implements RepositoryInterface
 
     /**
      * Delete a page from the database and clear the cache.
+     * This method finds a page by a specific key and value, deletes it,
+     * and clears the cache if the deletion is successful.
+     * @param string $key The key to search by (e.g., 'slug', 'id').
+     * @param string $value The value to match against the key.
+     * @return bool Returns true if the page was deleted, false otherwise.
+     * @throws \Illuminate\Contracts\Cache\LockTimeoutException
      */
     public function delete(string $key, string $value): bool
     {

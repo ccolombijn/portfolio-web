@@ -8,12 +8,14 @@ use Illuminate\Support\Facades\File;
 abstract class JsonRepository
 {
     protected string $sourceName;
+    protected array $validationRules;
     protected string $filePath;
     protected string $cacheKey;
 
-    public function __construct(string $sourceName)
+    public function __construct(string $sourceName, array $validationRules = [])
     {
         $this->sourceName = $sourceName;
+        $this->validationRules = $validationRules;
         $this->filePath = storage_path("app/public/json/{$this->sourceName}.json");
         $this->cacheKey = "{$this->sourceName}.json.data";
     }
@@ -57,8 +59,8 @@ abstract class JsonRepository
         if ($index === false) {
             return false;
         }
-        
-        $items[$index] = array_merge($items[$index], $data);
+        $validated = validator($data, $this->validationRules)->validate();
+        $items[$index] = array_merge($items[$index], $validated);
         $this->save($items);
 
         return true;
@@ -85,7 +87,8 @@ abstract class JsonRepository
     {
         File::ensureDirectoryExists(dirname($this->filePath));
         $options = JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES;
-        File::put($this->filePath, json_encode(array_values($items), $options));
+        $validated = validator($items, array_fill(0, count($items), $this->validationRules))->validate();
+        File::put($this->filePath, json_encode(array_values($validated), $options));
         Cache::forget($this->cacheKey);
     }
 }
