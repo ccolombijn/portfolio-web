@@ -11,6 +11,11 @@ class FilesController extends AdminController
 {
     public function __construct(private FileManagerInterface $fileManager) {}
 
+    /**
+     * Display a listing of files and folders.
+     * @param string $path
+     * @return View
+     */
     public function index(string $path = ''): View
     {
         $contents = $this->fileManager->listContents($path);
@@ -30,11 +35,23 @@ class FilesController extends AdminController
         ]);
     }
 
+    /**
+     * Show the form for uploading files.
+     * @param string $path
+     * @return View
+     */
     public function upload(string $path = ''): View
     {
         return view('admin.files.upload', ['path' => $path ?: '.']);
     }
 
+
+    /**
+     * Store uploaded files.
+     * @param Request $request
+     * @param string $path
+     * @return RedirectResponse
+     */
     public function store(Request $request, string $path = ''): RedirectResponse
     {
         $request->validate([
@@ -50,15 +67,21 @@ class FilesController extends AdminController
             ->with('success', 'Files uploaded and optimized successfully!');
     }
 
+    /**
+     * Remove the specified file or folder.
+     * @param string $path
+     * @return RedirectResponse
+     */
     public function destroy(string $path): RedirectResponse
     {
-        $this->fileManager->delete($path);
-
-        // Redirect to the parent directory
         $parentPath = dirname($path);
         $redirectPath = ($parentPath === '.' || $parentPath === '/') ? '' : $parentPath;
-
-        return redirect()->route('admin.files.view', ['path' => $redirectPath])
-            ->with('success', 'File or folder removed successfully!');
+        if ($this->fileManager->delete($path)) {
+            return redirect()->route('admin.files.view', ['path' => $redirectPath])
+                ->with('success', 'File or folder removed successfully!');
+        } else {
+            return redirect()->route('admin.files.view', ['path' => $redirectPath])
+                ->with('error', 'File or folder <b>' . $path . '</b> could not be removed');
+        }
     }
 }

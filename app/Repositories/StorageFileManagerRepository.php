@@ -15,20 +15,20 @@ class StorageFileManagerRepository implements FileManagerInterface
      */
     private string $disk = 'public';
 
-    public function __construct(private FileProcessingService $fileService)
-    {
-    }
+    public function __construct(private FileProcessingService $fileService) {}
 
     /**
      * Get a list of files and folders in a directory.
+     * @param string $path
+     * @return array
      */
     public function listContents(string $path = ''): array
     {
         $storage = Storage::disk($this->disk);
-        
+
         $directories = $storage->directories($path);
         $files = $storage->files($path);
-        
+
         $contents = [];
 
         foreach ($directories as $directory) {
@@ -46,7 +46,7 @@ class StorageFileManagerRepository implements FileManagerInterface
             if (basename($file) === '.gitignore') {
                 continue;
             }
-            
+
             $contents[] = [
                 'type' => 'file',
                 'name' => basename($file),
@@ -56,12 +56,14 @@ class StorageFileManagerRepository implements FileManagerInterface
                 'last_modified' => Carbon::createFromTimestamp($storage->lastModified($file))->format('Y-m-d H:i:s'),
             ];
         }
-        
+
         return $contents;
     }
 
     /**
      * Get details for a single file.
+     * @param string $path
+     * @return array|null
      */
     public function getFileDetails(string $path): ?array
     {
@@ -83,9 +85,12 @@ class StorageFileManagerRepository implements FileManagerInterface
             'hash' => hash_file('sha256', $physicalPath),
         ];
     }
-    
+
     /**
      * Store one or more uploaded files.
+     * @param string $path
+     * @param array $files
+     * @return void
      */
     public function store(string $path, array $files): void
     {
@@ -97,6 +102,8 @@ class StorageFileManagerRepository implements FileManagerInterface
 
     /**
      * Delete a file or folder.
+     * @param string $path
+     * @return bool
      */
     public function delete(string $path): bool
     {
@@ -117,9 +124,11 @@ class StorageFileManagerRepository implements FileManagerInterface
         }
         return false;
     }
-    
+
     /**
      * Create a new directory.
+     * @param string $path
+     * @return bool
      */
     public function createDirectory(string $path): bool
     {
