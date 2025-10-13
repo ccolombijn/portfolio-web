@@ -6,25 +6,27 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Gemini API Key
+    | OpenAI API Key and Organization
     |--------------------------------------------------------------------------
     |
-    | Here you may specify your Gemini API Key and organization. This will be
-    | used to authenticate with the Gemini API - you can find your API key
-    | on Google AI Studio, at https://aistudio.google.com/app/apikey.
+    | Here you may specify your OpenAI API Key and organization. This will be
+    | used to authenticate with the OpenAI API. You can find your API key
+    | on your OpenAI dashboard at https://platform.openai.com/api-keys.
+    |
     */
 
-    'api_key' => env('GEMINI_API_KEY'),
+    'api_key' => env('OPENAI_API_KEY'),
+    'organization' => env('OPENAI_ORGANIZATION', null),
 
     /*
     |--------------------------------------------------------------------------
-    | Gemini Base URL
+    | OpenAI Base URL
     |--------------------------------------------------------------------------
     |
-    | If you need a specific base URL for the Gemini API, you can provide it here.
-    | Otherwise, leave empty to use the default value.
+    | If you need to use a proxy or a specific base URL for the OpenAI API,
+    | you can provide it here. Otherwise, leave empty to use the default.
     */
-    'base_url' => env('GEMINI_BASE_URL'),
+    'base_url' => env('OPENAI_BASE_URL'),
 
     /*
     |--------------------------------------------------------------------------
@@ -35,7 +37,7 @@ return [
     | for a response. By default, the client will time out after 30 seconds.
     */
 
-    'request_timeout' => env('GEMINI_REQUEST_TIMEOUT', 30),
+    'request_timeout' => env('OPENAI_REQUEST_TIMEOUT', 30),
 
     /*
     |--------------------------------------------------------------------------
@@ -43,7 +45,7 @@ return [
     |--------------------------------------------------------------------------
     |
     | Here you may specify the default model to use for requests to the
-    | Gemini API. This can be overridden on a per-request basis.
+    | OpenAI API. This can be overridden on a per-request basis.
     */
-    'default_model' => env('GEMINI_DEFAULT_MODEL', 'gemini-2.5-flash-lite'),
+    'default_model' => env('OPENAI_DEFAULT_MODEL', 'gpt-4o-mini'),
 ];

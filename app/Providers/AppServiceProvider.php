@@ -19,30 +19,30 @@ use App\Http\Controllers\ContactController;
 use App\Repositories\JsonContactRepository;
 use App\Repositories\JsonPageRepository;
 use App\Repositories\JsonProjectRepository;
-use App\Repositories\StorageFileManagerRepository;
+
 use Illuminate\Support\Facades\Storage;
 
 
 class AppServiceProvider extends ServiceProvider
 {
 
-   
+
     /**
      * Register any application services.
      */
     public function register(): void
     {
-        $this->app->singleton(FileManagerInterface::class, StorageFileManagerRepository::class);
-    
+
+
 
 
         if (config('app.data_source') === 'database') {
-        //     $this->app->singleton(RepositoryInterface::class, DatabasePageRepository::class);
+            //     $this->app->singleton(RepositoryInterface::class, DatabasePageRepository::class);
         } else {
             $this->app->singleton(PageRepositoryInterface::class, JsonPageRepository::class);
             $this->app->singleton(ProjectRepositoryInterface::class, JsonProjectRepository::class);
             $this->app->singleton(ContactRepositoryInterface::class, JsonContactRepository::class);
-        
+
             //     $this->app->singleton(RepositoryInterface::class, JsonPageRepository::class);
         }
         $sources = [
@@ -51,7 +51,7 @@ class AppServiceProvider extends ServiceProvider
             'contact',
             'projects'
         ];
-        foreach($sources as $source) {
+        foreach ($sources as $source) {
             $this->singleton($source);
         }
     }
