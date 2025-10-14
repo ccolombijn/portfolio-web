@@ -21,10 +21,9 @@ export function aiClickwords(): void {
                     explanationElement.innerHTML = `<img src="${loadingGifUrl}" width="35" /> <span>Wachten..</span>`;
                     fetchStream(
                         {
-                            prompt_type: 'explanation',
+                            prompt: 'explanation',
                             input: textContent,
-                            stream: true,
-                            provider: 'gemini' // Or 'openai', or remove to use backend default
+                            stream: true
                         },
                         '/ai-generate',
                         explanationElement
