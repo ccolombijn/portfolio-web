@@ -1,9 +1,2 @@
 *
-!*.md
-!/md
-!/md/**
-!/images
-!/images/**
-!*.json
-!/json
 !.gitignore
