@@ -26,10 +26,20 @@ class PageFormOptionsService
 
             foreach ($reflection->getMethods(\ReflectionMethod::IS_PUBLIC) as $method) {
                 if ($method->getDeclaringClass()->getName() !== $className) continue;
-                
+
                 $returnType = $method->getReturnType();
-                if ($returnType && $returnType->getName() === View::class) {
-                    $methods[] = $method->getName();
+                if ($returnType) {
+                    $types = ($returnType instanceof \ReflectionUnionType || $returnType instanceof \ReflectionIntersectionType)
+                        ? $returnType->getTypes()
+                        : [$returnType];
+
+                    foreach ($types as $type) {
+                        if ($type instanceof \ReflectionNamedType && $type->getName() === View::class) {
+                            $methods[] = $method->getName();
+                            // Once we find a View, we can stop checking types for this method
+                            break;
+                        }
+                    }
                 }
             }
 
@@ -58,8 +68,8 @@ class PageFormOptionsService
             $viewName = basename($file->getFilename(), '.blade.php');
             $views[] = $fullPath ? str_replace('/', '.', $path) . '.' . $viewName : $viewName;
         }
-        
-        return $views; 
+
+        return $views;
     }
 
     /**
@@ -79,7 +89,7 @@ class PageFormOptionsService
     {
         return $this->getViews('components/sections', false);
     }
-    
+
     public function getSortedParts(array $pageParts = []): array
     {
         $allSections = $this->getSections();

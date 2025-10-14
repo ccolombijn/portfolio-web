@@ -24,7 +24,7 @@
                     <td class="p-3"><pre>{{ isset($page['route']) ? $page['route'] : '/' . $page['name'] }}</pre></td>
                     <td class="p-3">
                         @php $pageLink = isset($page['method']) ? $page['name'] . '.' . $page['method'] : $page['name'] @endphp
-                        <a href="{{ route('admin.pages.edit', $pageLink) }}"></a>
+                        <a href="{{ route('admin.pages.edit', $page['name']) }}"></a>
                         
                     </td>
                 </tr>
