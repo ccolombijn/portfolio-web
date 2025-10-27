@@ -1,4 +1,5 @@
 <?php
+
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\PageController;
 use App\Http\Controllers\ContactController;
@@ -8,12 +9,13 @@ use App\Http\Controllers\Admin\FilesController;
 use App\Http\Controllers\Admin\PageController as AdminPageController;
 use App\Http\Controllers\Admin\ProjectController as AdminProjectController;
 use App\Http\Controllers\Admin\SettingsController;
+use App\Http\Controllers\AIController;
 use Illuminate\Support\Facades\Auth;
 
 foreach (collect(app('pages.data'))->all() as $page) {
     $controllerAction = isset($page['controller'])
         ? 'App\\Http\\Controllers\\' . $page['controller'] . '@' . ($page['method'] ?? 'show')
-        : [PageController ::class, 'show'];
+        : [PageController::class, 'show'];
 
     $routeName = $page['name'] . (isset($page['method']) && str_contains($page['method'], '.') ? '.' . $page['method'] : '');
 
@@ -23,7 +25,7 @@ foreach (collect(app('pages.data'))->all() as $page) {
         ->name($routeName);
 }
 
-Route::post('/ai-generate', [GeminiController::class, 'generate'])->name('gemini.generate');
+Route::post('/ai-generate', [AIController::class, 'generate'])->name('ai.generate');
 Route::post('/contact', [ContactController::class, 'submit'])->name('contact.submit');
 Route::get('/download/{file}', [ContactController::class, 'download'])->name('contact.download');
 Auth::routes();
@@ -38,7 +40,7 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
     Route::get('/pages/{page}/edit', [AdminPageController::class, 'edit'])->name('pages.edit');
     Route::put('/pages/{page}', [AdminPageController::class, 'update'])->name('pages.update');
     Route::delete('/pages/{page}', [AdminPageController::class, 'destroy'])->name('pages.destroy');
-    
+
     // Project Management
     Route::get('/projects', [AdminProjectController::class, 'index'])->name('projects.index');
     Route::get('/projects/create', [AdminProjectController::class, 'create'])->name('projects.create');

@@ -2,9 +2,9 @@
 
 namespace App\Repositories;
 
-use App\Contracts\PageRepositoryInterface;
+use App\Contracts\ApplicationRepositoryInterface;
 
-class JsonPageRepository extends JsonRepository implements PageRepositoryInterface
+class JsonApplicationRepository extends JsonRepository implements ApplicationRepositoryInterface
 {
     public function __construct()
     {

@@ -16,5 +16,5 @@ return [
     |
     */
 
-    'default_provider' => env('AI_PROVIDER', 'openai'),
+    'default_provider' => env('AI_PROVIDER', 'gemini'),
 ];

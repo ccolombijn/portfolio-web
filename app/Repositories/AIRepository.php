@@ -4,11 +4,12 @@ declare(strict_types=1);
 
 namespace App\Repositories;
 
-use App\Repositories\Contracts\AIRepositoryInterface;
+use App\Contracts\AIRepositoryInterface;
 use Gemini\Client as GeminiClient;
 use Gemini\Data\Content;
 use Gemini\Enums\Role;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Log;
 use InvalidArgumentException;
 use OpenAI\Client as OpenAIClient;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -23,7 +24,7 @@ final class AIRepository implements AIRepositoryInterface
 
     public function generate(array $data, ?string $provider = null): JsonResponse|StreamedResponse
     {
-        $provider ??= config('ai.default_provider', 'openai');
+        $provider ??= config('ai.default_provider', 'gemini');
 
         return match ($provider) {
             'openai' => $this->generateWithOpenAI($data),
@@ -114,7 +115,7 @@ final class AIRepository implements AIRepositoryInterface
      */
     private function generateWithGemini(array $data): JsonResponse|StreamedResponse
     {
-        $model = $data['model'] ?? config('gemini.default_model', 'gemini-1.5-flash-latest');
+        $model = $data['model'] ?? config('gemini.default_model', 'gemini-2.5-flash-lite');
         $prompt = $this->buildGeminiPrompt($data);
 
         if (! empty($data['stream'])) {
@@ -179,16 +180,16 @@ final class AIRepository implements AIRepositoryInterface
                 Content::parse(part: $data['prompt'], role: Role::USER),
             ];
         }
-
+        // Log::info($data);
         // This handles the specific prompts from your frontend like 'explanation' and 'summarize'
-        if (isset($data['prompt_type'])) {
+        if (isset($data['prompt'])) {
             $prompts = [
                 'explanation' => 'Leg kort (in niet al te veel woorden), en in zo eenvoudig mogelijke bewoordingen, voor een leek (de lezer aan wie je dit uitlegt), uit wat ' . $data['input'] . ' betekent - in zover relevant, met betrekking to web development, grafische vormgeving of aanverwante software voor teams (je hoeft dit verder niet te benoemen)',
                 'summarize' => 'Geef een korte samenvatting (in niet al te veel woorden, maximaal enkele regels) van de volgende tekst alsof ik het aan iemand vertel over mijn tekst : ' . $data['input'],
             ];
 
-            if (isset($prompts[$data['prompt_type']])) {
-                return $prompts[$data['prompt_type']];
+            if (isset($prompts[$data['prompt']])) {
+                return $prompts[$data['prompt']];
             }
         }
 

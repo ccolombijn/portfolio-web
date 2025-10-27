@@ -11,6 +11,7 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 use League\CommonMark\Environment\Environment;
 use League\CommonMark\Extension\CommonMark\CommonMarkCoreExtension;
 use League\CommonMark\MarkdownConverter;
+use Log;
 
 class GeminiController extends Controller
 {
@@ -21,7 +22,7 @@ class GeminiController extends Controller
     /**
      * 
      */
-    public function show(array $page){}
+    public function show(array $page) {}
     /**
      * Default request
      */
@@ -30,8 +31,8 @@ class GeminiController extends Controller
         $data = $request->json()->all();
         $model = isset($data['model']) ? $data['model'] : 'gemini-2.5-flash-lite';
         $prompt = $this->prompt($data);
-        
-        if(isset($data['stream'])){
+        Log::debug($prompt);
+        if (isset($data['stream'])) {
             $stream = Gemini::generativeModel(model: $model)
                 ->streamGenerateContent($prompt);
             return new StreamedResponse(function () use ($stream) {
@@ -52,7 +53,7 @@ class GeminiController extends Controller
                     } else {
                         echo "[ERROR: An unexpected error occurred during the stream.]";
                     }
-                    
+
                     if (ob_get_level() > 0) {
                         ob_flush();
                     }
@@ -68,7 +69,7 @@ class GeminiController extends Controller
             //         echo $response->text();
             //     }
             // });
-        } 
+        }
         // else { // non-streaming 
         //     $model = Gemini::generativeModel($model);
         //     $result = $model->generateContent( $prompt . ' : ' . $word);
@@ -81,13 +82,13 @@ class GeminiController extends Controller
         //     return str_replace('&quot;','"',strip_tags($converter->convert($result->text())));
         // }
     }
-    
+
     /**
      * Build prompt with given data
      */
-    private function prompt(array $data) 
+    private function prompt(array $data)
     {
-        if(isset($data['history'])){
+        if (isset($data['history'])) {
             $newPrompt = $data['prompt'];
             $historyPayload = $data['history'];
             $history = [];
@@ -102,9 +103,9 @@ class GeminiController extends Controller
             ];
         } else {
             $prompts = [
-                'explanation' => 'Leg kort (in niet al te veel woorden), en in zo eenvoudig mogelijke bewoordingen, voor een leek (de lezer aan wie je dit uitlegt), uit wat ' . $data['input']. ' betekent - in zover relevant, met betrekking tot web development, grafische vormgeving of aanverwante software voor teams (je hoeft dit verder niet te benoemen)',
-                'summarize' => 'Geef een korte samenvatting (in niet al te veel woorden, maximaal enkele regels) van de volgende tekst alsof ik het aan iemand vertel over mijn tekst : ' .$data['input']
-            
+                'explanation' => 'Leg kort (in niet al te veel woorden), en in zo eenvoudig mogelijke bewoordingen, voor een leek (de lezer aan wie je dit uitlegt), uit wat ' . $data['input'] . ' betekent - in zover relevant, met betrekking tot web development, grafische vormgeving of aanverwante software voor teams (je hoeft dit verder niet te benoemen)',
+                'summarize' => 'Geef een korte samenvatting (in niet al te veel woorden, maximaal enkele regels) van de volgende tekst alsof ik het aan iemand vertel over mijn tekst : ' . $data['input']
+
             ];
             $response = $prompts[$data['prompt']];
         }

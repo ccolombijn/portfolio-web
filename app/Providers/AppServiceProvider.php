@@ -2,10 +2,12 @@
 
 namespace App\Providers;
 
+use App\Contracts\AIRepositoryInterface;
 use App\Contracts\ContactRepositoryInterface;
 use App\Contracts\FileManagerInterface;
 use App\Contracts\PageRepositoryInterface;
 use App\Contracts\ProjectRepositoryInterface;
+use App\Repositories\AIRepository;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\FilesController;
 use App\Http\Controllers\Admin\PageController as AdminPageController;
@@ -42,6 +44,7 @@ class AppServiceProvider extends ServiceProvider
             $this->app->singleton(PageRepositoryInterface::class, JsonPageRepository::class);
             $this->app->singleton(ProjectRepositoryInterface::class, JsonProjectRepository::class);
             $this->app->singleton(ContactRepositoryInterface::class, JsonContactRepository::class);
+            $this->app->singleton(AIRepositoryInterface::class, AIRepository::class);
 
             //     $this->app->singleton(RepositoryInterface::class, JsonPageRepository::class);
         }
