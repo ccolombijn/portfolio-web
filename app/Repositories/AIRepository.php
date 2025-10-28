@@ -9,9 +9,11 @@ use Gemini\Client as GeminiClient;
 use Gemini\Data\Content;
 use Gemini\Enums\Role;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
 use InvalidArgumentException;
 use OpenAI\Client as OpenAIClient;
+use Spatie\PdfToText\Pdf;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 use Throwable;
 
@@ -25,7 +27,7 @@ final class AIRepository implements AIRepositoryInterface
     public function generate(array $data, ?string $provider = null): JsonResponse|StreamedResponse
     {
         $provider ??= config('ai.default_provider', 'gemini');
-        Log::debug('AI generation requested.', ['provider' => $provider, 'data' => $data]);
+        //Log::debug('AI generation requested.', ['provider' => $provider, 'data' => $data]);
         return match ($provider) {
             'openai' => $this->generateWithOpenAI($data),
             'gemini' => $this->generateWithGemini($data),
@@ -39,7 +41,7 @@ final class AIRepository implements AIRepositoryInterface
     private function generateWithOpenAI(array $data): JsonResponse|StreamedResponse
     {
         try {
-            $model = $data['model'] ?? config('openai.default_model', 'gpt-4o-mini');
+            $model = $data['model'] ?? config('ai.models.openai', 'gpt-5-nano');
             $messages = $this->buildOpenAIMessages($data);
 
             if (! empty($data['stream'])) {
@@ -71,8 +73,9 @@ final class AIRepository implements AIRepositoryInterface
             }
         }
 
-        $messages[] = ['role' => 'user', 'content' => (string) ($data['prompt'] ?? '')];
+        $prompt = $this->buildBasePrompt($data);
 
+        $messages[] = ['role' => 'user', 'content' => $prompt];
         return $messages;
     }
 
@@ -115,15 +118,14 @@ final class AIRepository implements AIRepositoryInterface
      */
     private function generateWithGemini(array $data): JsonResponse|StreamedResponse
     {
-        // Non-streaming for Gemini (if ever needed)
         try {
-            $model = $data['model'] ?? config('gemini.default_model', 'gemini-2.5-flash-lite');
+            $model = $data['model'] ?? config('ai.models.gemini', 'gemini-2.5-flash');
             $prompt = $this->buildGeminiPrompt($data);
 
             if (! empty($data['stream'])) {
                 return $this->streamGeminiResponse($model, $prompt);
             }
-
+            // Non-streaming response
             $result = $this->gemini->generativeModel($model)->generateContent($prompt);
             return response()->json(['response' => $result->text()]);
         } catch (Throwable $e) {
@@ -135,7 +137,6 @@ final class AIRepository implements AIRepositoryInterface
     private function streamGeminiResponse(string $model, $prompt): StreamedResponse
     {
         Log::debug('Gemini: Starting streaming response.', ['model' => $model, 'prompt' => $prompt]);
-        // When $prompt is an array of Content objects, it must be spread.
         $stream = is_array($prompt)
             ? $this->gemini->generativeModel($model)->streamGenerateContent(...$prompt)
             : $this->gemini->generativeModel($model)->streamGenerateContent($prompt);
@@ -171,43 +172,110 @@ final class AIRepository implements AIRepositoryInterface
      */
     private function buildGeminiPrompt(array $data): string|array
     {
+        $basePromptParts = $this->buildBasePromptParts($data);
+
         if (isset($data['history'])) {
-            $history = array_map(function ($item) {
-                $role = ($item['role'] ?? 'user') === 'model' ? Role::MODEL : Role::USER;
-                $partText = (string) ($item['text'] ?? ''); // Ensure it's a string
-                // Explicitly ensure it's a string, even if redundant, for defensive programming
-                if (!is_string($partText)) {
-                    Log::warning('Gemini: History item text is not a string after cast, forcing conversion.', ['original_type' => gettype($partText), 'original_value' => $partText]);
-                    $partText = (string) $partText;
-                }
-                Log::debug('Gemini: Passing history item part to Content::parse', ['type' => gettype($partText), 'value' => $partText, 'role' => $role->value]);
-                return Content::parse(part: $partText, role: $role);
-            }, $data['history']);
+            $history = [];
 
-            $promptText = (string) ($data['prompt'] ?? '');
-            // Explicitly ensure it's a string, even if redundant, for defensive programming
-            if (!is_string($promptText)) {
-                Log::warning('Gemini: User prompt is not a string after cast, forcing conversion.', ['original_type' => gettype($promptText), 'original_value' => $promptText]);
-                $promptText = (string) $promptText;
+            // Add system prompt and file context as initial user messages if not already in history
+            if (!empty($basePromptParts['system_prompt'])) {
+                $history[] = Content::parse(part: $basePromptParts['system_prompt'], role: Role::USER);
+                $history[] = Content::parse(part: 'Ok, begrepen.', role: Role::MODEL); // Acknowledge the system prompt
             }
-            Log::debug('Gemini: Passing user prompt to Content::parse (with history)', ['type' => gettype($promptText), 'value' => $promptText, 'role' => Role::USER->value]);
-            return [
-                ...$history,
-                Content::parse(part: $promptText, role: Role::USER),
-            ];
+            if (!empty($basePromptParts['file_context'])) {
+                $history[] = Content::parse(part: $basePromptParts['file_context'], role: Role::USER);
+                $history[] = Content::parse(part: 'Ok, ik heb de bestanden gelezen.', role: Role::MODEL); // Acknowledge the file context
+            }
+
+            foreach ($data['history'] as $item) {
+                $role = ($item['role'] ?? 'user') === 'model' ? Role::MODEL : Role::USER;
+                $partText = (string) ($item['text'] ?? '');
+                $history[] = Content::parse(part: $partText, role: $role);
+            }
+
+            return [...$history, Content::parse(part: $basePromptParts['prompt'], role: Role::USER)];
         }
 
-        $promptText = (string) ($data['prompt'] ?? '');
-        Log::debug('Gemini: User prompt part type and value (no history)', ['type' => gettype($promptText), 'value' => $promptText]);
+        return trim(implode("\n\n", array_filter($basePromptParts)));
+    }
 
-        $key = 'ai.prompts.' . $promptText;
-        $promptTemplate = config($key);
+    /**
+     * Build the base prompt including file contexts.
+     */
+    private function buildBasePrompt(array $data): string
+    {
+        $parts = $this->buildBasePromptParts($data);
 
-        if ($promptTemplate) {
-            return str_replace(':input', $data['input'] ?? '', $promptTemplate);
+        return trim(implode("\n\n", array_filter($parts)));
+    }
+
+    private function buildBasePromptParts(array $data): array
+    {
+        $prompt = (string) ($data['prompt'] ?? '');
+        $isPredefinedPrompt = array_key_exists($prompt, config('ai.prompts', []));
+
+        // If the prompt is a key for a predefined prompt, get the full text.
+        if ($isPredefinedPrompt) {
+            $promptTemplate = config('ai.prompts.' . $prompt);
+            $prompt = str_replace(':input', $data['input'] ?? '', $promptTemplate);
         }
 
-        // Fallback to the main prompt if no specific type is matched
-        return $promptText;
+        $fileContext = '';
+        // Only add file context if it's not a predefined prompt like 'explanation' or 'summarize'
+        // We check the original prompt key here, not the full text.
+        if (!$isPredefinedPrompt) {
+            $defaultFiles = config('ai.default_files', []);
+            $requestFiles = $data['file_paths'] ?? [];
+            $allFiles = array_unique(array_merge($defaultFiles, $requestFiles));
+
+            foreach ($allFiles as $filePath) {
+                $fileContent = $this->getFileContentForPrompt($filePath);
+                if ($fileContent !== null) {
+                    $fileName = basename($filePath);
+                    $fileContext .= "File: `{$fileName}`\n\n```\n{$fileContent}\n```\n\n";
+                }
+            }
+        }
+
+        return [
+            'system_prompt' => config('ai.system_prompt', ''),
+            'file_context' => $fileContext,
+            'prompt' => $prompt,
+        ];
+    }
+
+    // Sanitize and restrict path to storage/app/public
+    private function getFileContentForPrompt(string $filePath): ?string
+    {
+        // Sanitize and restrict path to storage/app/public
+        $filePath = str_replace('..', '', $filePath);
+
+        $storage = Storage::disk('public');
+
+        if (! $storage->exists($filePath)) {
+            Log::warning('File path could not be found in storage/app/public.', ['path' => $filePath]);
+            return null;
+        }
+
+        $fullPath = $storage->path($filePath);
+        $realPath = realpath($fullPath);
+
+        if (! $realPath || ! str_starts_with($realPath, realpath($storage->path('')))) {
+            Log::warning('File path access attempt outside of storage/app/public.', ['path' => $filePath]);
+            return null;
+        }
+
+        $extension = strtolower(pathinfo($filePath, PATHINFO_EXTENSION));
+
+        if ($extension === 'pdf') {
+            try {
+                return Pdf::getText($fullPath);
+            } catch (Throwable $e) {
+                Log::error("Failed to extract text from PDF: {$fullPath}", ['exception' => $e]);
+                return "Error: Could not extract text from PDF file '{$filePath}'.";
+            }
+        }
+
+        return $storage->get($filePath);
     }
 }

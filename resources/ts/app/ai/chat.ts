@@ -1,5 +1,5 @@
 import { marked } from 'marked';
-
+import loadingGifUrl from '../../../images/loading.gif';
 type HistoryRole = 'user' | 'model';
 type DisplayRole = 'user' | 'ai';
 
@@ -56,10 +56,18 @@ async function sendPrompt(): Promise<void> {
     }
     
     const userInput = userInputEl.value.trim();
-    if (!userInput) return;
+    const filePathInput = document.getElementById('file-path-input') as HTMLInputElement | null;
+    const filePaths = filePathInput ? filePathInput.value.trim().split(',').map(p => p.trim()).filter(p => p) : [];
+
+    if (!userInput && filePaths.length === 0) return;
     
     // Display user message immediately
-    const userMessageElement = displayMessage(userInput, 'user');
+    let userMessage = userInput;
+    if (filePaths.length > 0) {
+        const fileList = filePaths.join(', ');
+        userMessage = `File(s): ${fileList}\n\n${userInput}`;
+    }
+    const userMessageElement = displayMessage(userMessage, 'user');
     const chatContainer = document.getElementById('chat');
     if (chatContainer) {
         chatContainer.appendChild(userMessageElement);
@@ -70,11 +78,13 @@ async function sendPrompt(): Promise<void> {
     const requestBody = {
         stream : true,
         prompt: userInput,
-        history: chatHistory.slice(0, -1) // Send complete history except current message
+        history: chatHistory.slice(0, -1), // Send complete history except current message
+        file_paths: filePaths.length > 0 ? filePaths : undefined
     };
 
     let fullResponse = '';
     const aiMessageElement = createMessageElement('ai'); // Create AI message element
+    aiMessageElement.innerHTML = `<img src="${loadingGifUrl}" width="35" /> <span>Wachten..</span>`;
     if (chatContainer) {
         chatContainer.appendChild(aiMessageElement); // Append AI message placeholder
         chatContainer.scrollTop = chatContainer.scrollHeight; // Scroll to bottom

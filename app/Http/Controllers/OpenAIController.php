@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Repositories\Contracts\AIRepositoryInterface;
+use App\Contracts\AIRepositoryInterface;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -25,6 +25,8 @@ final class OpenAIController extends Controller
             'stream' => ['sometimes', 'boolean'],
             'model' => ['sometimes', 'string'],
             'provider' => ['sometimes', 'string', 'in:openai,gemini'],
+            'file_paths' => ['sometimes', 'array'],
+            'file_paths.*' => ['string'],
         ]);
 
         return $this->aiRepository->generate($data, $data['provider'] ?? null);

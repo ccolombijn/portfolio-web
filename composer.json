@@ -18,7 +18,8 @@
         "pug-php/pug": "^3.5",
         "pug-php/pug-filter-markdown": "^1.2",
         "spatie/image": "^3.8",
-        "spatie/laravel-image-optimizer": "^1.8"
+        "spatie/laravel-image-optimizer": "^1.8",
+        "spatie/pdf-to-text": "^1.54"
     },
     "require-dev": {
         "barryvdh/laravel-ide-helper": "^3.6",

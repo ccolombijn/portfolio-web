@@ -10,7 +10,7 @@
     }
     
 }
-#ai-explanation, #ai-summarize {
+#ai-explanation, #ai-summarize, .message-ai {
     @apply bg-no-repeat;
     //@include backgrounds.background-image-webp('/resources/images/sparkle', 'png');
     background-position-y: 16px;
