@@ -40,7 +40,7 @@ return [
     |
     */
     'models' => [
-        'gemini' => env('AI_MODEL_GEMINI', 'gemini-2.5-flash'),
+        'gemini' => env('AI_MODEL_GEMINI', 'gemini-2.5-flash-lite'),
         'openai' => env('AI_MODEL_OPENAI', 'gpt-5-nano'),
     ],
 
