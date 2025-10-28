@@ -15,10 +15,6 @@ use Log;
 
 class GeminiController extends Controller
 {
-    // public function __construct(array $content)
-    // {
-    //     parent::__construct($content);
-    // }
     /**
      * 
      */

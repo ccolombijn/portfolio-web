@@ -1,0 +1,40 @@
+.chat {
+    // The main chat container acts as a grid for message alignment and provides overall padding.
+    @apply grid grid-cols-12 gap-y-4 p-4;
+
+    &-input {
+        @apply grid grid-cols-12 gap-2 mb-4;
+        input {
+            // Enhanced input styling with focus state
+            @apply col-span-10 p-2 border border-gray-300 rounded-lg focus:outline-none;
+        }
+        button {
+            // Styled button for better appearance and hover effect
+            @apply col-span-2 rounded-lg duration-200;
+        }
+    }
+
+    .message {
+    
+        @apply p-3 rounded-xl max-w-[85%] break-words shadow-md p-8;
+
+
+        &-ai {
+            @apply  text-gray-800 col-span-full p-8;
+        }
+
+        &-user {
+            @apply bg-gray-300 col-span-7 col-start-4 rounded-xl rounded-tr-xs p-8 text-gray-800;
+        }
+
+        p {
+            @apply p-0 m-0;
+        }
+        ul {
+            @apply p-0 m-0 list-disc pl-5; 
+        }
+        li {
+            @apply mb-1;
+        }
+    }
+}

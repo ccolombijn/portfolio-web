@@ -5,7 +5,8 @@
     "scripts": {
         "prebuild": "node scripts/generate-bg-classes.cjs",
         "build": "vite build",
-        "dev": "vite"
+        "dev": "vite",
+        "watch": "vite build --watch"
     },
     "devDependencies": {
         "@popperjs/core": "^2.11.6",

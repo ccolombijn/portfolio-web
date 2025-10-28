@@ -11,19 +11,30 @@ interface ChatMessage {
 const chatHistory: ChatMessage[] = [];
 
 export function aiChat(): void {
-    const sendPromptBtn = document.getElementById('user-input-btn');
+    console.log('AI Chat initialized');
+    const sendPromptBtn = document.getElementById('user-input-btn') as HTMLButtonElement | null;
+    const userInputEl = document.getElementById('user-input') as HTMLInputElement | null;
+
     if (sendPromptBtn) {
         sendPromptBtn.addEventListener('click', sendPrompt);
+    }
+
+    if (userInputEl) {
+        userInputEl.addEventListener('keydown', (event: KeyboardEvent) => {
+            if (event.key === 'Enter') sendPrompt();
+        });
     } else {
-        console.error('user-input-btn not found');
+        console.warn('user-input-btn not found');
     }
 }
 
 /**
  * @todo display message implementation
  */
-function displayMessage(input: string, role: DisplayRole): void {
-    console.log(`[${role}]: ${input}`);
+function displayMessage(input: string, role: DisplayRole): HTMLElement { // This function now only creates the element
+    const element = createMessageElement(role);
+    element.textContent = input;
+    return element; // Return the created element, don't append here
 }
 
 function createMessageElement(role: DisplayRole): HTMLElement {
@@ -33,12 +44,12 @@ function createMessageElement(role: DisplayRole): HTMLElement {
     }
     const element = document.createElement('div');
     element.classList.add(`message-${role}`);
-    chatContainer.append(element);
     return element;
 }
 
 async function sendPrompt(): Promise<void> {
     const userInputEl = document.getElementById('user-input') as HTMLInputElement | null;
+    console.log('Sending prompt...');
     if (!userInputEl) {
         console.error("Input with ID 'user-input' not found.");
         return;
@@ -46,20 +57,28 @@ async function sendPrompt(): Promise<void> {
     
     const userInput = userInputEl.value.trim();
     if (!userInput) return;
-
+    
+    // Display user message immediately
+    const userMessageElement = displayMessage(userInput, 'user');
+    const chatContainer = document.getElementById('chat');
+    if (chatContainer) {
+        chatContainer.appendChild(userMessageElement);
+    }
     chatHistory.push({ role: 'user', text: userInput });
-
-    displayMessage(userInput, 'user');
     userInputEl.value = '';
 
     const requestBody = {
+        stream : true,
         prompt: userInput,
         history: chatHistory.slice(0, -1) // Send complete history except current message
     };
 
     let fullResponse = '';
-    const targetElement = createMessageElement('ai');
-    // @todo implement fetchStream here
+    const aiMessageElement = createMessageElement('ai'); // Create AI message element
+    if (chatContainer) {
+        chatContainer.appendChild(aiMessageElement); // Append AI message placeholder
+        chatContainer.scrollTop = chatContainer.scrollHeight; // Scroll to bottom
+    }
     try {
         const csrfTokenMeta = document.querySelector('meta[name="csrf-token"]');
         const csrfToken = csrfTokenMeta?.getAttribute('content');
@@ -91,11 +110,18 @@ async function sendPrompt(): Promise<void> {
                 break;
             }
             const chunk = decoder.decode(value, { stream: true });
-            fullResponse += chunk;
-            targetElement.innerHTML = await marked.parse(fullResponse); // Render markdown
+            fullResponse += chunk; // Accumulate the full response
+            aiMessageElement.innerHTML = await marked.parse(fullResponse); // Render markdown with each chunk
+            if (chatContainer) {
+                chatContainer.scrollTop = chatContainer.scrollHeight; // Scroll to bottom with each chunk
+            }
         }
+        chatHistory.push({ role: 'model', text: fullResponse }); // Add complete AI message to history
     } catch (error) {
         console.error('Fetch error:', error);
-        targetElement.textContent = 'Er is een fout opgetreden bij de communicatie met de AI.';
+        aiMessageElement.textContent = 'Er is een fout opgetreden bij de communicatie met de AI.'; // Display error
+        if (chatContainer) {
+            chatContainer.scrollTop = chatContainer.scrollHeight; // Scroll to bottom on error
+        }
     }
 }

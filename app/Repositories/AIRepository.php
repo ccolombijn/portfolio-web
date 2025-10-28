@@ -25,7 +25,7 @@ final class AIRepository implements AIRepositoryInterface
     public function generate(array $data, ?string $provider = null): JsonResponse|StreamedResponse
     {
         $provider ??= config('ai.default_provider', 'gemini');
-
+        Log::debug('AI generation requested.', ['provider' => $provider, 'data' => $data]);
         return match ($provider) {
             'openai' => $this->generateWithOpenAI($data),
             'gemini' => $this->generateWithGemini($data),
@@ -38,14 +38,14 @@ final class AIRepository implements AIRepositoryInterface
      */
     private function generateWithOpenAI(array $data): JsonResponse|StreamedResponse
     {
-        $model = $data['model'] ?? config('openai.default_model', 'gpt-4o-mini');
-        $messages = $this->buildOpenAIMessages($data);
-
-        if (! empty($data['stream'])) {
-            return $this->streamOpenAIResponse($model, $messages);
-        }
-
         try {
+            $model = $data['model'] ?? config('openai.default_model', 'gpt-4o-mini');
+            $messages = $this->buildOpenAIMessages($data);
+
+            if (! empty($data['stream'])) {
+                return $this->streamOpenAIResponse($model, $messages);
+            }
+
             $result = $this->openai->chat()->create([
                 'model' => $model,
                 'messages' => $messages,
@@ -53,7 +53,7 @@ final class AIRepository implements AIRepositoryInterface
 
             return response()->json(['response' => $result->choices[0]->message->content]);
         } catch (Throwable $e) {
-            // Log the error for debugging
+            Log::error('Failed to get a response from OpenAI.', ['exception' => $e]);
             return response()->json(['error' => 'Failed to get a response from OpenAI.'], 500);
         }
     }
@@ -66,12 +66,12 @@ final class AIRepository implements AIRepositoryInterface
             foreach ($data['history'] as $item) {
                 $role = $item['role'] ?? 'user';
                 if (in_array($role, ['user', 'assistant', 'system'])) {
-                    $messages[] = ['role' => $role, 'content' => $item['text']];
+                    $messages[] = ['role' => $role, 'content' => (string) ($item['text'] ?? '')];
                 }
             }
         }
 
-        $messages[] = ['role' => 'user', 'content' => $data['prompt']];
+        $messages[] = ['role' => 'user', 'content' => (string) ($data['prompt'] ?? '')];
 
         return $messages;
     }
@@ -96,7 +96,7 @@ final class AIRepository implements AIRepositoryInterface
                     }
                 }
             } catch (Throwable $e) {
-                // Log the error for debugging
+                Log::error('An unexpected error occurred during the OpenAI stream.', ['exception' => $e]);
                 echo "[ERROR: An unexpected error occurred during the stream.]";
                 if (ob_get_level() > 0) {
                     ob_flush();
@@ -115,27 +115,30 @@ final class AIRepository implements AIRepositoryInterface
      */
     private function generateWithGemini(array $data): JsonResponse|StreamedResponse
     {
-        $model = $data['model'] ?? config('gemini.default_model', 'gemini-2.5-flash-lite');
-        $prompt = $this->buildGeminiPrompt($data);
-
-        if (! empty($data['stream'])) {
-            return $this->streamGeminiResponse($model, $prompt);
-        }
-
         // Non-streaming for Gemini (if ever needed)
         try {
-            $result = $this->gemini->generativeModel($model)->generateContent($prompt);
+            $model = $data['model'] ?? config('gemini.default_model', 'gemini-2.5-flash-lite');
+            $prompt = $this->buildGeminiPrompt($data);
 
+            if (! empty($data['stream'])) {
+                return $this->streamGeminiResponse($model, $prompt);
+            }
+
+            $result = $this->gemini->generativeModel($model)->generateContent($prompt);
             return response()->json(['response' => $result->text()]);
         } catch (Throwable $e) {
-            // Log the error for debugging
+            Log::error('Failed to get a response from Gemini.', ['exception' => $e]);
             return response()->json(['error' => 'Failed to get a response from Gemini.'], 500);
         }
     }
 
     private function streamGeminiResponse(string $model, $prompt): StreamedResponse
     {
-        $stream = $this->gemini->generativeModel($model)->streamGenerateContent($prompt);
+        Log::debug('Gemini: Starting streaming response.', ['model' => $model, 'prompt' => $prompt]);
+        // When $prompt is an array of Content objects, it must be spread.
+        $stream = is_array($prompt)
+            ? $this->gemini->generativeModel($model)->streamGenerateContent(...$prompt)
+            : $this->gemini->generativeModel($model)->streamGenerateContent($prompt);
 
         return new StreamedResponse(function () use ($stream) {
             try {
@@ -149,7 +152,7 @@ final class AIRepository implements AIRepositoryInterface
                     }
                 }
             } catch (Throwable $e) {
-                // Handle specific Gemini errors or general stream errors
+                Log::error('An unexpected error occurred during the Gemini stream.', ['exception' => $e]);
                 echo "[ERROR: An unexpected error occurred during the stream.]";
                 if (ob_get_level() > 0) {
                     ob_flush();
@@ -166,34 +169,45 @@ final class AIRepository implements AIRepositoryInterface
     /**
      * Build prompt with given data for Gemini.
      */
-    private function buildGeminiPrompt(array $data)
+    private function buildGeminiPrompt(array $data): string|array
     {
         if (isset($data['history'])) {
-            $history = [];
-            foreach ($data['history'] as $item) {
+            $history = array_map(function ($item) {
                 $role = ($item['role'] ?? 'user') === 'model' ? Role::MODEL : Role::USER;
-                $history[] = Content::parse(part: $item['text'], role: $role);
-            }
+                $partText = (string) ($item['text'] ?? ''); // Ensure it's a string
+                // Explicitly ensure it's a string, even if redundant, for defensive programming
+                if (!is_string($partText)) {
+                    Log::warning('Gemini: History item text is not a string after cast, forcing conversion.', ['original_type' => gettype($partText), 'original_value' => $partText]);
+                    $partText = (string) $partText;
+                }
+                Log::debug('Gemini: Passing history item part to Content::parse', ['type' => gettype($partText), 'value' => $partText, 'role' => $role->value]);
+                return Content::parse(part: $partText, role: $role);
+            }, $data['history']);
 
+            $promptText = (string) ($data['prompt'] ?? '');
+            // Explicitly ensure it's a string, even if redundant, for defensive programming
+            if (!is_string($promptText)) {
+                Log::warning('Gemini: User prompt is not a string after cast, forcing conversion.', ['original_type' => gettype($promptText), 'original_value' => $promptText]);
+                $promptText = (string) $promptText;
+            }
+            Log::debug('Gemini: Passing user prompt to Content::parse (with history)', ['type' => gettype($promptText), 'value' => $promptText, 'role' => Role::USER->value]);
             return [
                 ...$history,
-                Content::parse(part: $data['prompt'], role: Role::USER),
+                Content::parse(part: $promptText, role: Role::USER),
             ];
         }
-        // Log::info($data);
-        // This handles the specific prompts from your frontend like 'explanation' and 'summarize'
-        if (isset($data['prompt'])) {
-            $prompts = [
-                'explanation' => 'Leg kort (in niet al te veel woorden), en in zo eenvoudig mogelijke bewoordingen, voor een leek (de lezer aan wie je dit uitlegt), uit wat ' . $data['input'] . ' betekent - in zover relevant, met betrekking to web development, grafische vormgeving of aanverwante software voor teams (je hoeft dit verder niet te benoemen)',
-                'summarize' => 'Geef een korte samenvatting (in niet al te veel woorden, maximaal enkele regels) van de volgende tekst alsof ik het aan iemand vertel over mijn tekst : ' . $data['input'],
-            ];
 
-            if (isset($prompts[$data['prompt']])) {
-                return $prompts[$data['prompt']];
-            }
+        $promptText = (string) ($data['prompt'] ?? '');
+        Log::debug('Gemini: User prompt part type and value (no history)', ['type' => gettype($promptText), 'value' => $promptText]);
+
+        $key = 'ai.prompts.' . $promptText;
+        $promptTemplate = config($key);
+
+        if ($promptTemplate) {
+            return str_replace(':input', $data['input'] ?? '', $promptTemplate);
         }
 
         // Fallback to the main prompt if no specific type is matched
-        return $data['prompt'];
+        return $promptText;
     }
 }
