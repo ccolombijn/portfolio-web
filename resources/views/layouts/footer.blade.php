@@ -13,6 +13,6 @@
         @endif
         <div class="footer__sitemap">
             @include('components.sitemap')
-        </div> 
+        </div>
     </div>
 </section>

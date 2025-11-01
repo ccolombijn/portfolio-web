@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Repositories;
 
+use Anthropic\Client as AnthropicClient;
 use App\Contracts\AIRepositoryInterface;
 use Gemini\Client as GeminiClient;
 use Gemini\Data\Content;
@@ -13,6 +14,7 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
 use InvalidArgumentException;
 use OpenAI\Client as OpenAIClient;
+use Spatie\PdfToText\Exceptions\BinaryNotFoundException;
 use Spatie\PdfToText\Pdf;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 use Throwable;
@@ -21,9 +23,36 @@ final class AIRepository implements AIRepositoryInterface
 {
     public function __construct(
         private readonly OpenAIClient $openai,
-        private readonly GeminiClient $gemini
+        private readonly GeminiClient $gemini,
+        private readonly AnthropicClient $anthropic
     ) {}
 
+    /**
+     * Get available AI profile names.
+     */
+    public function getAvailableProfiles(): array
+    {
+        $storage = Storage::disk('public');
+        $path = 'json/profiles';
+
+        if (! $storage->exists($path)) {
+            Log::warning("AI profiles directory not found: {$path}");
+
+            return [];
+        }
+
+        $files = $storage->files($path);
+
+        return collect($files)
+            ->filter(fn ($file) => pathinfo($file, PATHINFO_EXTENSION) === 'json')
+            ->map(fn ($file) => pathinfo($file, PATHINFO_FILENAME))
+            ->values()
+            ->all();
+    }
+    
+    /**
+     * Generate AI response based on the specified provider.
+     */
     public function generate(array $data, ?string $provider = null): JsonResponse|StreamedResponse
     {
         $provider ??= config('ai.default_provider', 'gemini');
@@ -59,7 +88,9 @@ final class AIRepository implements AIRepositoryInterface
             return response()->json(['error' => 'Failed to get a response from OpenAI.'], 500);
         }
     }
-
+    /**
+     * Build OpenAI messages with given data.
+     */
     private function buildOpenAIMessages(array $data): array
     {
         $messages = [];
@@ -78,7 +109,9 @@ final class AIRepository implements AIRepositoryInterface
         $messages[] = ['role' => 'user', 'content' => $prompt];
         return $messages;
     }
-
+    /**
+     * Handles streaming generation using the OpenAI client.
+     */
     private function streamOpenAIResponse(string $model, array $messages): StreamedResponse
     {
         $stream = $this->openai->chat()->createStreamed([
@@ -114,7 +147,7 @@ final class AIRepository implements AIRepositoryInterface
     }
 
     /**
-     * Handles generation using the Gemini client.
+     * Handles generation using the Gemini client without streaming.
      */
     private function generateWithGemini(array $data): JsonResponse|StreamedResponse
     {
@@ -133,7 +166,9 @@ final class AIRepository implements AIRepositoryInterface
             return response()->json(['error' => 'Failed to get a response from Gemini.'], 500);
         }
     }
-
+    /**
+     * Handles streaming generation using the Gemini client.
+     */
     private function streamGeminiResponse(string $model, $prompt): StreamedResponse
     {
         Log::debug('Gemini: Starting streaming response.', ['model' => $model, 'prompt' => $prompt]);
@@ -200,6 +235,114 @@ final class AIRepository implements AIRepositoryInterface
     }
 
     /**
+     * Handles generation using the Anthropic client.
+     */
+    private function generateWithAnthropic(array $data): JsonResponse|StreamedResponse
+    {
+        try {
+            $model = $data['model'] ?? config('ai.models.anthropic', 'claude-3-haiku-20240307');
+            $messages = $this->buildAnthropicMessages($data);
+            $systemPrompt = $this->buildBasePromptParts($data)['system_prompt'];
+
+            if (! empty($data['stream'])) {
+                return $this->streamAnthropicResponse($model, $messages, $systemPrompt);
+            }
+
+            $result = $this->anthropic->messages()->create([
+                'model' => $model,
+                'system' => $systemPrompt,
+                'messages' => $messages,
+                'max_tokens' => 4096, // Anthropic requires max_tokens
+            ]);
+
+            return response()->json(['response' => $result->content[0]->text]);
+        } catch (Throwable $e) {
+            Log::error('Failed to get a response from Anthropic.', ['exception' => $e]);
+            return response()->json(['error' => 'Failed to get a response from Anthropic.'], 500);
+        }
+    }
+
+    /**
+     * Handles streaming generation using the Anthropic client.
+     */
+    private function streamAnthropicResponse(string $model, array $messages, string $systemPrompt): StreamedResponse
+    {
+        $stream = $this->anthropic->messages()->createStreamed([
+            'model' => $model,
+            'system' => $systemPrompt,
+            'messages' => $messages,
+            'max_tokens' => 4096,
+        ]);
+
+        return new StreamedResponse(function () use ($stream) {
+            try {
+                foreach ($stream as $result) {
+                    if ($result->type === 'content_block_delta') {
+                        $content = $result->delta->text;
+                        if (null !== $content) {
+                            echo $content;
+                            if (ob_get_level() > 0) {
+                                ob_flush();
+                            }
+                            flush();
+                        }
+                    }
+                }
+            } catch (Throwable $e) {
+                Log::error('An unexpected error occurred during the Anthropic stream.', ['exception' => $e]);
+                echo "[ERROR: An unexpected error occurred during the stream.]";
+                if (ob_get_level() > 0) {
+                    ob_flush();
+                }
+                flush();
+            }
+        }, 200, [
+            'Content-Type' => 'text/plain',
+            'X-Accel-Buffering' => 'no',
+            'Cache-Control' => 'no-cache',
+        ]);
+    }
+
+    private function buildAnthropicMessages(array $data): array
+    {
+        $allMessages = [];
+
+        if (! empty($data['history'])) {
+            foreach ($data['history'] as $item) {
+                $role = $item['role'] ?? 'user';
+                if (in_array($role, ['user', 'assistant'])) {
+                    $allMessages[] = ['role' => $role, 'content' => (string) ($item['text'] ?? '')];
+                }
+            }
+        }
+
+        $baseParts = $this->buildBasePromptParts($data);
+        $prompt = trim(implode("\n\n", array_filter([$baseParts['file_context'], $baseParts['prompt']])));
+
+        $allMessages[] = ['role' => 'user', 'content' => $prompt];
+
+        if (empty($allMessages)) {
+            return [];
+        }
+
+        // Merge consecutive messages from the same role to comply with Anthropic's format.
+        $messages = [];
+        $lastMessage = array_shift($allMessages);
+
+        foreach ($allMessages as $currentMessage) {
+            if ($currentMessage['role'] === $lastMessage['role']) {
+                $lastMessage['content'] .= "\n\n" . $currentMessage['content'];
+            } else {
+                $messages[] = $lastMessage;
+                $lastMessage = $currentMessage;
+            }
+        }
+        $messages[] = $lastMessage;
+
+        return $messages;
+    }
+
+    /**
      * Build the base prompt including file contexts.
      */
     private function buildBasePrompt(array $data): string
@@ -208,9 +351,18 @@ final class AIRepository implements AIRepositoryInterface
 
         return trim(implode("\n\n", array_filter($parts)));
     }
-
+    /**
+     * Build prompt with given data
+     * @return array{system_prompt: string, file_context: string, prompt: string}
+     */
     private function buildBasePromptParts(array $data): array
-    {
+    {   
+        $profileName = $data['profile'] ?? config('ai.default_profile');
+        $profileData = null;
+        if ($profileName) {
+            $profileData = $this->loadProfile($profileName);
+        }
+
         $prompt = (string) ($data['prompt'] ?? '');
         $isPredefinedPrompt = array_key_exists($prompt, config('ai.prompts', []));
 
@@ -223,14 +375,14 @@ final class AIRepository implements AIRepositoryInterface
         $fileContext = '';
         // Only add file context if it's not a predefined prompt like 'explanation' or 'summarize'
         // We check the original prompt key here, not the full text.
-        if (!$isPredefinedPrompt) {
-            $defaultFiles = config('ai.default_files', []);
+        if (! $isPredefinedPrompt) {
+            $defaultFiles = $profileData['files'] ?? config('ai.default_files', []);
             $requestFiles = $data['file_paths'] ?? [];
             $allFiles = array_unique(array_merge($defaultFiles, $requestFiles));
 
             foreach ($allFiles as $filePath) {
                 $fileContent = $this->getFileContentForPrompt($filePath);
-                if ($fileContent !== null) {
+                if (null !== $fileContent) {
                     $fileName = basename($filePath);
                     $fileContext .= "File: `{$fileName}`\n\n```\n{$fileContent}\n```\n\n";
                 }
@@ -238,10 +390,34 @@ final class AIRepository implements AIRepositoryInterface
         }
 
         return [
-            'system_prompt' => config('ai.system_prompt', ''),
+            'system_prompt' => $data['system_prompt'] ?? $profileData['system_prompt'] ?? config('ai.system_prompt', ''),
             'file_context' => $fileContext,
             'prompt' => $prompt,
         ];
+    }
+    /**
+     * Load AI profile from JSON file.
+     * @param string $profileName
+     */
+    private function loadProfile(string $profileName): ?array
+    {
+        // Sanitize profile name to prevent directory traversal
+        $profileName = basename($profileName);
+        $path = "json/profiles/{$profileName}.json";
+        $storage = Storage::disk('public');
+
+        if (! $storage->exists($path)) {
+            Log::warning("AI profile not found: {$path}");
+            return null;
+        }
+
+        try {
+            $content = $storage->get($path);
+            return json_decode($content, true, 512, JSON_THROW_ON_ERROR);
+        } catch (\JsonException $e) {
+            Log::error("Failed to parse AI profile: {$path}", ['exception' => $e]);
+            return null;
+        }
     }
 
     // Sanitize and restrict path to storage/app/public
@@ -270,6 +446,9 @@ final class AIRepository implements AIRepositoryInterface
         if ($extension === 'pdf') {
             try {
                 return Pdf::getText($fullPath);
+            } catch (BinaryNotFoundException $e) {
+                Log::critical('pdftotext binary not found. Please install poppler-utils on your system.', ['exception' => $e]);
+                return null;
             } catch (Throwable $e) {
                 Log::error("Failed to extract text from PDF: {$fullPath}", ['exception' => $e]);
                 return "Error: Could not extract text from PDF file '{$filePath}'.";

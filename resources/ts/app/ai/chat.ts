@@ -9,9 +9,61 @@ interface ChatMessage {
 }
 
 const chatHistory: ChatMessage[] = [];
-
+const profiles = [];
+/**
+ * Get and populate profiles from backend
+ * @todo populate profiles from backend
+ * @returns 
+ */
+function populateProfiles(): void {
+    const profileSelectEl = document.getElementById('profile-select') as HTMLSelectElement | null;
+    if (!profileSelectEl) {
+        console.warn('ai/chat.populateProfiles : profile-select element not found. Aborted');
+        return;
+    }
+    fetchProfilesFromBackend().then(data => {
+        profiles.push(...data);
+        profiles.unshift('Default'); 
+        appendProfilesToSelect(profileSelectEl, profiles);
+    }).catch(error => {
+        console.error('Error fetching profiles:', error);
+    });
+}
+/**
+ * Append profiles to select element
+ * @param profileSelectEl 
+ * @param profiles 
+ */
+function appendProfilesToSelect(profileSelectEl: HTMLSelectElement, profiles: string[]): void {
+    profileSelectEl.innerHTML = '';
+    profiles.forEach(profile => {
+        const option = document.createElement('option');
+        option.value = profile === 'default' ? '' : profile;
+        option.textContent = profile;
+        profileSelectEl.appendChild(option);
+    });
+}
+/**
+ * Fetch profiles from backend
+ * @returns Promise<string[]>
+ */
+function fetchProfilesFromBackend(): Promise<string[]> {
+    return new Promise((resolve, reject) => {
+        fetch('/ai-profiles').then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! Status: ${response.status}`);
+            }
+            return response.json();
+        }).then(data => {
+            resolve(data.profiles);
+        }).catch(error => {
+            reject(error);
+        });
+    });
+}
+      
 export function aiChat(): void {
-    console.log('AI Chat initialized');
+    populateProfiles();
     const sendPromptBtn = document.getElementById('user-input-btn') as HTMLButtonElement | null;
     const userInputEl = document.getElementById('user-input') as HTMLInputElement | null;
 
@@ -24,19 +76,23 @@ export function aiChat(): void {
             if (event.key === 'Enter') sendPrompt();
         });
     } else {
-        console.warn('user-input-btn not found');
+        console.warn('ai/chat : #user-input-btn not found. Aborted' );
     }
 }
 
 /**
  * @todo display message implementation
  */
-function displayMessage(input: string, role: DisplayRole): HTMLElement { // This function now only creates the element
+function displayMessage(input: string, role: DisplayRole): HTMLElement { 
     const element = createMessageElement(role);
     element.textContent = input;
-    return element; // Return the created element, don't append here
+    return element; 
 }
-
+/**
+ * 
+ * @param role {DisplayRole}
+ * @returns HTMLElement
+ */
 function createMessageElement(role: DisplayRole): HTMLElement {
     const chatContainer = document.getElementById('chat');
     if (!chatContainer) {
@@ -46,10 +102,12 @@ function createMessageElement(role: DisplayRole): HTMLElement {
     element.classList.add(`message-${role}`);
     return element;
 }
-
+/**
+ * 
+ * @returns Promise<void>
+ */
 async function sendPrompt(): Promise<void> {
     const userInputEl = document.getElementById('user-input') as HTMLInputElement | null;
-    console.log('Sending prompt...');
     if (!userInputEl) {
         console.error("Input with ID 'user-input' not found.");
         return;
@@ -58,6 +116,9 @@ async function sendPrompt(): Promise<void> {
     const userInput = userInputEl.value.trim();
     const filePathInput = document.getElementById('file-path-input') as HTMLInputElement | null;
     const filePaths = filePathInput ? filePathInput.value.trim().split(',').map(p => p.trim()).filter(p => p) : [];
+    const profileSelectEl = document.getElementById('profile-select') as HTMLSelectElement | null;
+    const selectedProfile = profileSelectEl ? profileSelectEl.value : userInputEl.dataset.profile || undefined;
+
 
     if (!userInput && filePaths.length === 0) return;
     
@@ -79,7 +140,8 @@ async function sendPrompt(): Promise<void> {
         stream : true,
         prompt: userInput,
         history: chatHistory.slice(0, -1), // Send complete history except current message
-        file_paths: filePaths.length > 0 ? filePaths : undefined
+        file_paths: filePaths.length > 0 ? filePaths : undefined,
+        profile: selectedProfile && selectedProfile !== '' ? selectedProfile : undefined
     };
 
     let fullResponse = '';
@@ -115,13 +177,12 @@ async function sendPrompt(): Promise<void> {
         while (true) {
             const { done, value } = await reader.read();
             if (done) {
-                // Voeg het volledige AI-bericht toe aan de geschiedenis als de stream klaar is
                 chatHistory.push({ role: 'model', text: fullResponse });
                 break;
             }
             const chunk = decoder.decode(value, { stream: true });
-            fullResponse += chunk; // Accumulate the full response
-            aiMessageElement.innerHTML = await marked.parse(fullResponse); // Render markdown with each chunk
+            fullResponse += chunk; 
+            aiMessageElement.innerHTML = await marked.parse(fullResponse); 
             if (chatContainer) {
                 chatContainer.scrollTop = chatContainer.scrollHeight; // Scroll to bottom with each chunk
             }

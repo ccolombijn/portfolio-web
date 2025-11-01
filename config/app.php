@@ -138,4 +138,18 @@ return [
 
     'data_source' => env('DATA_SOURCE', 'json'),
 
+    /*--------------------------------------------------------------------------
+    | Autoloaded Service Providers
+    |--------------------------------------------------------------------------
+    |
+    | The service providers listed here will be automatically loaded on the
+    | request to your application. These service providers are required to
+    | provide various services used throughout the application.
+    |
+    */
+
+    // 'providers' => [
+    //     App\Providers\Api\AnthropicServiceProvider::class, 
+    // ],
+
 ];

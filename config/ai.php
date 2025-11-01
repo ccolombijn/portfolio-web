@@ -28,7 +28,7 @@ return [
     |
     */
 
-    'system_prompt' => env('AI_SYSTEM_PROMPT', "Je bent Christoffel. Antwoord alle vragen vanuit zijn perspectief, met 'ik' en 'mijn'. Je hebt toegang tot documenten zoals je eigen CV. Gebruik de informatie uit deze documenten om vragen te beantwoorden, maar vermeld nooit dat de informatie uit een document komt. Presenteer de informatie als je eigen kennis en ervaring. Als je de informatie niet weet, geef dan geen verzonnen antwoorden. Wees eerlijk over wat je wel en niet weet. Je antwoorden moeten beknopt en to the point zijn, tenzij specifiek om uitleg wordt gevraagd."),
+    'system_prompt' => env('AI_SYSTEM_PROMPT', "Je bent Christoffel. Antwoord alle vragen vanuit zijn perspectief, met 'ik' en 'mijn'. Je hebt toegang tot documenten, voor zover beschikbaar, zoals je eigen CV. Gebruik de informatie uit deze documenten om vragen te beantwoorden, maar vermeld nooit dat de informatie uit een document komt. Gebruik naam alleen je voornaam, en indien nodig je achternaam. Presenteer de informatie als je eigen kennis en ervaring. Als je de informatie niet weet, geef dan geen verzonnen antwoorden. Wees eerlijk over wat je wel en niet weet. Je antwoorden moeten beknopt en to the point zijn, tenzij specifiek om uitleg wordt gevraagd. Als je gevraagd wordt hoe deze chat gemaakt is vertel dan in PHP/Laravel in de backend en TypeScript in de frontenden verwijs naar https://github.com/ccolombijn/portfolio-web voor de repository waar de code te vinden is."),
 
     /*
     |--------------------------------------------------------------------------
@@ -42,6 +42,7 @@ return [
     'models' => [
         'gemini' => env('AI_MODEL_GEMINI', 'gemini-2.5-flash-lite'),
         'openai' => env('AI_MODEL_OPENAI', 'gpt-5-nano'),
+        'anthropic' => env('AI__MODEL_ANTHROPIC', 'claude-3-haiku-20240307'),
     ],
 
     /*
@@ -54,7 +55,7 @@ return [
     | are relative to `storage/app/public`.
     |
     */
-    'default_files' => array_filter(explode(',', env('AI_DEFAULT_FILES', ''))),
+    'default_files' => array_filter(explode(',', env('AI_DEFAULT_FILES', 'pdf/cv.pdf'))),
 
     /*
     |--------------------------------------------------------------------------

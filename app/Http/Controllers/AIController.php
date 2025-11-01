@@ -9,6 +9,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
+
 final class AIController extends Controller
 {
     /**
@@ -31,5 +32,15 @@ final class AIController extends Controller
         ]);
 
         return $this->aiRepository->generate($data, $data['provider'] ?? null);
+    }
+
+    /**
+     * Get available AI profiles.
+     *
+     * @return JsonResponse
+     */
+    public function profiles(): JsonResponse
+    {
+        return response()->json(['profiles' => $this->aiRepository->getAvailableProfiles()]);
     }
 }

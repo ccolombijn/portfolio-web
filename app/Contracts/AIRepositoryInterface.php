@@ -13,4 +13,8 @@ interface AIRepositoryInterface
      * @return JsonResponse|StreamedResponse
      */
     public function generate(array $data, ?string $provider = null);
+    /**
+     * @return array<string>
+     */
+    public function getAvailableProfiles(): array;
 }
