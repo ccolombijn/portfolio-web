@@ -64,6 +64,7 @@ function fetchProfilesFromBackend(): Promise<string[]> {
       
 export function aiChat(): void {
     populateProfiles();
+    fetchAndDisplaySuggestions();
     const sendPromptBtn = document.getElementById('user-input-btn') as HTMLButtonElement | null;
     const userInputEl = document.getElementById('user-input') as HTMLInputElement | null;
 
@@ -74,6 +75,12 @@ export function aiChat(): void {
     if (userInputEl) {
         userInputEl.addEventListener('keydown', (event: KeyboardEvent) => {
             if (event.key === 'Enter') sendPrompt();
+        });
+        userInputEl.addEventListener('input', () => {
+            const suggestionsContainer = document.getElementById('chat-suggestions');
+            if (suggestionsContainer) {
+                suggestionsContainer.innerHTML = '';
+            }
         });
     } else {
         console.warn('ai/chat : #user-input-btn not found. Aborted' );
@@ -177,7 +184,7 @@ async function sendPrompt(): Promise<void> {
         while (true) {
             const { done, value } = await reader.read();
             if (done) {
-                chatHistory.push({ role: 'model', text: fullResponse });
+                //chatHistory.push({ role: 'model', text: fullResponse });
                 break;
             }
             const chunk = decoder.decode(value, { stream: true });
@@ -188,11 +195,78 @@ async function sendPrompt(): Promise<void> {
             }
         }
         chatHistory.push({ role: 'model', text: fullResponse }); // Add complete AI message to history
+        fetchAndDisplaySuggestions();
     } catch (error) {
         console.error('Fetch error:', error);
         aiMessageElement.textContent = 'Er is een fout opgetreden bij de communicatie met de AI.'; // Display error
         if (chatContainer) {
             chatContainer.scrollTop = chatContainer.scrollHeight; // Scroll to bottom on error
         }
+    }
+}
+
+/**
+ * Fetches and displays prompt suggestions from the backend.
+ */
+async function fetchAndDisplaySuggestions(): Promise<void> {
+    const suggestionsContainer = document.getElementById('chat-suggestions');
+    if (!suggestionsContainer) {
+        console.warn('ai/chat.fetchAndDisplaySuggestions: #chat-suggestions element not found. Aborted');
+        return;
+    }
+    suggestionsContainer.innerHTML = ''; // Clear previous suggestions
+
+    const filePathInput = document.getElementById('file-path-input') as HTMLInputElement | null;
+    const filePaths = filePathInput ? filePathInput.value.trim().split(',').map(p => p.trim()).filter(p => p) : [];
+    const profileSelectEl = document.getElementById('profile-select') as HTMLSelectElement | null;
+    const selectedProfile = profileSelectEl ? profileSelectEl.value : undefined;
+
+    const requestBody = {
+        history: chatHistory,
+        file_paths: filePaths.length > 0 ? filePaths : undefined,
+        profile: selectedProfile && selectedProfile !== '' ? selectedProfile : undefined
+    };
+
+    try {
+        const csrfTokenMeta = document.querySelector('meta[name="csrf-token"]');
+        const csrfToken = csrfTokenMeta?.getAttribute('content');
+        if (!csrfToken) {
+            throw new Error('CSRF token not found.');
+        }
+
+        const response = await fetch('/ai-suggest', { // New endpoint
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': csrfToken,
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+            },
+            body: JSON.stringify(requestBody)
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        console.log(data);
+        if (data.suggestions && data.suggestions.length > 0) {
+            data.suggestions.forEach((suggestion: string) => {
+                const button = document.createElement('button');
+                button.textContent = suggestion;
+                button.classList.add('btn','btn--outline'); // Add some styling class
+                button.onclick = () => {
+                    const userInputEl = document.getElementById('user-input') as HTMLInputElement | null;
+                    if (userInputEl) {
+                        userInputEl.value = suggestion;
+                        userInputEl.focus();
+                        sendPrompt();
+                    }
+                };
+                suggestionsContainer.appendChild(button);
+            });
+        }
+    } catch (error) {
+        console.error('Error fetching prompt suggestions:', error);
     }
 }

@@ -43,4 +43,19 @@ final class AIController extends Controller
     {
         return response()->json(['profiles' => $this->aiRepository->getAvailableProfiles()]);
     }
+
+    /**
+     * Generate prompt suggestions based on the chat context.
+     */    public function suggestPrompts(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'history' => ['required', 'array'],
+            'file_paths' => ['sometimes', 'array'],
+            'profile' => ['sometimes', 'string'],
+        ]);
+
+        $suggestions = $this->aiRepository->suggestPrompts($data);
+
+        return response()->json(['suggestions' => $suggestions]);
+    }
 }

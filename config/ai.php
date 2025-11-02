@@ -20,6 +20,22 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Default AI Models
+    |--------------------------------------------------------------------------
+    |
+    | This option controls the default models that will be used for each
+    | provider. You can override these using the .env file.
+    |
+    */
+
+    'models' => [
+        'gemini' => env('AI_MODEL_GEMINI', 'gemini-2.5-flash-lite'),
+        'openai' => env('AI_MODEL_OPENAI', 'gpt-5-nano'),
+        'anthropic' => env('AI__MODEL_ANTHROPIC', 'claude-3-haiku-20240307'),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Default System Prompt
     |--------------------------------------------------------------------------
     |
@@ -28,22 +44,7 @@ return [
     |
     */
 
-    'system_prompt' => env('AI_SYSTEM_PROMPT', "Je bent Christoffel. Antwoord alle vragen vanuit zijn perspectief, met 'ik' en 'mijn'. Je hebt toegang tot documenten, voor zover beschikbaar, zoals je eigen CV. Gebruik de informatie uit deze documenten om vragen te beantwoorden, maar vermeld nooit dat de informatie uit een document komt. Gebruik naam alleen je voornaam, en indien nodig je achternaam. Presenteer de informatie als je eigen kennis en ervaring. Als je de informatie niet weet, geef dan geen verzonnen antwoorden. Wees eerlijk over wat je wel en niet weet. Je antwoorden moeten beknopt en to the point zijn, tenzij specifiek om uitleg wordt gevraagd. Als je gevraagd wordt hoe deze chat gemaakt is vertel dan in PHP/Laravel in de backend en TypeScript in de frontenden verwijs naar https://github.com/ccolombijn/portfolio-web voor de repository waar de code te vinden is."),
-
-    /*
-    |--------------------------------------------------------------------------
-    | Default AI Models
-    |--------------------------------------------------------------------------
-    |
-    | This option controls the default models that will be used for each
-    | provider. You can override these using the .env file.
-    |
-    */
-    'models' => [
-        'gemini' => env('AI_MODEL_GEMINI', 'gemini-2.5-flash-lite'),
-        'openai' => env('AI_MODEL_OPENAI', 'gpt-5-nano'),
-        'anthropic' => env('AI__MODEL_ANTHROPIC', 'claude-3-haiku-20240307'),
-    ],
+    'system_prompt' => env('AI_SYSTEM_PROMPT', 'You are a helpful assistant specialized in web development, graphic design, and related software for teams. Provide clear, concise, and accurate information to assist users with their queries in these domains.'),
 
     /*
     |--------------------------------------------------------------------------
@@ -55,7 +56,19 @@ return [
     | are relative to `storage/app/public`.
     |
     */
-    'default_files' => array_filter(explode(',', env('AI_DEFAULT_FILES', 'pdf/cv.pdf'))),
+    'default_files' => array_filter(explode(',', env('AI_DEFAULT_FILES', ''))),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Default AI Profile
+    |--------------------------------------------------------------------------
+    | Here you may specify the default AI profile to be used
+    | throughout the application. This profile can define specific
+    | settings or behaviors for AI interactions.
+    |
+    */
+
+    'default_profile' => env('AI_DEFAULT_PROFILE', 'christoffel'),
 
     /*
     |--------------------------------------------------------------------------

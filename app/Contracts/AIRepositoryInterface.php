@@ -17,4 +17,9 @@ interface AIRepositoryInterface
      * @return array<string>
      */
     public function getAvailableProfiles(): array;
+
+    /**
+     * @return array<string>
+     */ 
+    public function suggestPrompts(array $context): array;
 }

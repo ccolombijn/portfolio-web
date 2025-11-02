@@ -13,6 +13,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
 use InvalidArgumentException;
+use Js;
 use OpenAI\Client as OpenAIClient;
 use Spatie\PdfToText\Exceptions\BinaryNotFoundException;
 use Spatie\PdfToText\Pdf;
@@ -49,7 +50,7 @@ final class AIRepository implements AIRepositoryInterface
             ->values()
             ->all();
     }
-    
+
     /**
      * Generate AI response based on the specified provider.
      */
@@ -60,6 +61,7 @@ final class AIRepository implements AIRepositoryInterface
         return match ($provider) {
             'openai' => $this->generateWithOpenAI($data),
             'gemini' => $this->generateWithGemini($data),
+            'anthropic' => $this->generateWithAnthropic($data),	
             default => throw new InvalidArgumentException("Unsupported AI provider: [{$provider}]")
         };
     }
@@ -457,4 +459,67 @@ final class AIRepository implements AIRepositoryInterface
 
         return $storage->get($filePath);
     }
+    /**
+     * Generate prompt suggestions based on the chat context.
+     */
+    public function suggestPrompts(array $data): array
+    {
+        try {
+            $provider = config('ai.default_provider', 'gemini');
+            $model = config('ai.models.' . $provider, 'gemini-1.5-flash-latest');
+
+            // Build a concise history string
+            $historyString = collect($data['history'] ?? [])
+                ->map(fn ($item) => ($item['role'] ?? 'user') . ': ' . ($item['text'] ?? ''))
+                ->implode("\n");
+
+            // Build file context string
+            $fileContext = '';
+            $filePaths = $data['file_paths'] ?? [];
+            if (!empty($filePaths)) {
+                $fileNames = implode(', ', array_map('basename', $filePaths));
+                $fileContext = "The user has provided the following files for context: {$fileNames}.";
+            }
+
+            // Build profile context string
+            $profileContext = '';
+            if (!empty($data['profile'])) {
+                $profileContext = "The current AI profile is '{$data['profile']}'.";
+            }
+
+            $promptForSuggestions = <<<PROMPT
+            You are an assistant that suggests relevant next prompts for a user in a chat conversation.
+            Based on the provided chat history and context, suggest up to 3 short, relevant follow-up questions or prompts.
+            The suggestions should be things the user might want to ask next.
+            Return a JSON object with a single key "suggestions" which is an array of strings. For example: {"suggestions": ["What is a closure?", "Explain promises.", "How do I use flexbox?"]}
+            If you have no suggestions, the "suggestions" array should be empty.
+            Do not add any other text, just the JSON object.
+
+            Context:
+            {$profileContext}
+            {$fileContext}
+
+            Chat History:
+            ---
+            {$historyString}
+            ---
+            PROMPT;
+
+            $result = $this->gemini->generativeModel($model)->generateContent($promptForSuggestions);
+            $suggestionsJson = preg_replace('/^```json\s*|\s*```$/', '', $result->text());
+
+            $decoded = json_decode(trim($suggestionsJson), true);
+
+            if (json_last_error() !== JSON_ERROR_NONE || !isset($decoded['suggestions']) || !is_array($decoded['suggestions'])) {
+                Log::warning('AI prompt suggestion returned invalid JSON.', ['response' => $suggestionsJson]);
+                return [];
+            }
+
+            return $decoded['suggestions'];
+        } catch (Throwable $e) {
+            Log::error('Failed to get prompt suggestions from AI.', ['exception' => $e]);
+            throw $e;
+        }
+    }
 }
+
