@@ -13,8 +13,14 @@
         }
 
         #user-input {
-            @apply flex-grow p-2 focus:outline-none bg-transparent;
+            @apply flex-grow focus:outline-none bg-transparent focus:bg-white/20;
             min-height: 40px;
+
+            // Add a placeholder using the ::before pseudo-element
+            &:empty::before {
+                content: 'Nieuwsgierig? Stel me iedere vraag en ik geef direct antwoord! ';
+                @apply text-gray-500 pointer-events-none;
+            }
         }
 
         .prompt-btn {
@@ -28,17 +34,20 @@
 
 
         &-ai {
-            @apply  text-gray-800 col-span-9 p-8 rounded-xl rounded-tl-xs;
+            @apply  text-gray-800 col-span-9 p-8 rounded-xl rounded-tl-xs border-1 border-solid border-gray-300;
             img {
                 float: left;
             }
             span {
                 @apply animate-pulse;
             }
+            a {
+                @apply text-gray-500 hover:text-blue-500 underline;
+            }
         }
 
         &-user {
-            @apply bg-[#cccccc6b] col-span-9 col-start-4 rounded-xl rounded-tr-xs p-8 text-gray-800;
+            @apply bg-[#cccccc6b] col-span-9 col-start-4 rounded-xl rounded-tr-xs p-8 text-gray-800 ;
         }
 
         p {

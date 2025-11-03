@@ -66,7 +66,7 @@ export function aiChat(): void {
     populateProfiles();
     fetchAndDisplaySuggestions();
     const sendPromptBtn = document.getElementById('user-input-btn') as HTMLButtonElement | null;
-    const userInputEl = document.getElementById('user-input') as HTMLInputElement | null;
+    const userInputEl = document.getElementById('user-input') as HTMLDivElement | null;
 
     if (sendPromptBtn) {
         sendPromptBtn.addEventListener('click', sendPrompt);
@@ -74,7 +74,10 @@ export function aiChat(): void {
 
     if (userInputEl) {
         userInputEl.addEventListener('keydown', (event: KeyboardEvent) => {
-            if (event.key === 'Enter') sendPrompt();
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault(); // Prevent adding a new line
+                sendPrompt();
+            }
         });
         userInputEl.addEventListener('input', () => {
             const suggestionsContainer = document.getElementById('chat-suggestions');
@@ -114,13 +117,14 @@ function createMessageElement(role: DisplayRole): HTMLElement {
  * @returns Promise<void>
  */
 async function sendPrompt(): Promise<void> {
-    const userInputEl = document.getElementById('user-input') as HTMLInputElement | null;
+
+    const userInputEl = document.getElementById('user-input') as HTMLDivElement | null;
     if (!userInputEl) {
         console.error("Input with ID 'user-input' not found.");
         return;
     }
     
-    const userInput = userInputEl.value.trim();
+    const userInput = userInputEl.textContent?.trim() || '';
     const filePathInput = document.getElementById('file-path-input') as HTMLInputElement | null;
     const filePaths = filePathInput ? filePathInput.value.trim().split(',').map(p => p.trim()).filter(p => p) : [];
     const profileSelectEl = document.getElementById('profile-select') as HTMLSelectElement | null;
@@ -141,7 +145,7 @@ async function sendPrompt(): Promise<void> {
         chatContainer.appendChild(userMessageElement);
     }
     chatHistory.push({ role: 'user', text: userInput });
-    userInputEl.value = '';
+    userInputEl.textContent = ''; // Clear the div after sending
 
     const requestBody = {
         stream : true,
@@ -256,9 +260,9 @@ async function fetchAndDisplaySuggestions(): Promise<void> {
                 button.textContent = suggestion;
                 button.classList.add('btn','btn--outline'); // Add some styling class
                 button.onclick = () => {
-                    const userInputEl = document.getElementById('user-input') as HTMLInputElement | null;
+                    const userInputEl = document.getElementById('user-input') as HTMLDivElement | null;
                     if (userInputEl) {
-                        userInputEl.value = suggestion;
+                        userInputEl.textContent = suggestion;
                         userInputEl.focus();
                         sendPrompt();
                     }

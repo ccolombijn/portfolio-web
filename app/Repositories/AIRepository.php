@@ -58,8 +58,15 @@ final class AIRepository implements AIRepositoryInterface
      */
     public function generate(array $data, ?string $provider = null): JsonResponse|StreamedResponse
     {
-        $provider ??= config('ai.default_provider', 'gemini');
-        //Log::debug('AI generation requested.', ['provider' => $provider, 'data' => $data]);
+        $task = array_key_exists($data['prompt'], config('ai.prompts', [])) ? $data['prompt'] : 'chat';
+        $taskConfig = $this->getTaskConfig($task);
+
+        $provider = $taskConfig['provider'];
+        // If a model is specified in the task config, inject it into the data array.
+        if (!isset($data['model']) && $taskConfig['model']) {
+            $data['model'] = $taskConfig['model'];
+        }
+
         return match ($provider) {
             'openai' => $this->generateWithOpenAI($data),
             'gemini' => $this->generateWithGemini($data),
@@ -380,6 +387,24 @@ final class AIRepository implements AIRepositoryInterface
         return response()->json(['error' => $message], 500);
     }
 
+    /**
+     * Get the provider and model for a specific task from the configuration.
+     *
+     * @return array{provider: string, model: ?string}
+     */
+    private function getTaskConfig(string $task): array
+    {
+        $handler = config("ai.tasks.{$task}") ?? config('ai.default_handler');
+
+        if (!str_contains($handler, ':')) {
+            throw new InvalidArgumentException("Invalid AI handler format for task '{$task}'. Expected 'provider:model', but got '{$handler}'.");
+        }
+
+        [$provider, $model] = explode(':', $handler, 2);
+
+        return ['provider' => $provider, 'model' => $model];
+    }
+
 
 
     /**
@@ -435,7 +460,7 @@ final class AIRepository implements AIRepositoryInterface
         }
 
         return [
-            'system_prompt' => $data['system_prompt'] ?? $profileData['system_prompt'] ?? config('ai.system_prompt', ''),
+            'system_prompt' => $data['system_prompt'] ?? $profileData['system_prompt'] ?? config('ai.prompts.system_prompt', ''),
             'file_context' => $fileContext,
             'prompt' => $prompt,
         ];
@@ -534,8 +559,9 @@ final class AIRepository implements AIRepositoryInterface
     public function suggestPrompts(array $data): array
     {
         try {
-            $provider = config('ai.default_provider', 'gemini');
-            $model = config('ai.models.' . $provider, 'gemini-1.5-flash-latest');
+            $taskConfig = $this->getTaskConfig('suggest');
+            $provider = $taskConfig['provider'];
+            $model = $taskConfig['model'];
 
             $promptForSuggestions = $this->buildBasePrompt($data);
 

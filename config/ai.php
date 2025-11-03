@@ -5,47 +5,16 @@ declare(strict_types=1);
 return [
     /*
     |--------------------------------------------------------------------------
-    | Default AI Provider
+    | Default AI Handler
     |--------------------------------------------------------------------------
     |
-    | This option controls the default AI provider that will be used by the
-    | application. You can switch this to 'gemini' or any other provider
-    | you add to the AIRepository.
+    | This option controls the default AI handler (provider and model) that
+    | will be used by the application, in the format 'provider:model'.
     |
-    | Supported: "openai", "gemini"
-    | Supported: "openai", "gemini", "anthropic", "mistral"
+    | e.g., 'gemini:gemini-1.5-flash-latest', 'openai:gpt-4o-mini'
     */
 
-    'default_provider' => env('AI_PROVIDER', 'gemini'),
-
-    /*
-    |--------------------------------------------------------------------------
-    | Default AI Models
-    |--------------------------------------------------------------------------
-    |
-    | This option controls the default models that will be used for each
-    | provider. You can override these using the .env file.
-    |
-    */
-
-    'models' => [
-        'gemini' => env('AI_MODEL_GEMINI', 'gemini-2.5-flash-lite'),
-        'openai' => env('AI_MODEL_OPENAI', 'gpt-5-nano'),
-        'anthropic' => env('AI__MODEL_ANTHROPIC', 'claude-3-haiku-20240307'),
-        'mistral' => env('AI_MODEL_MISTRAL', 'mistral-large-latest'),
-    ],
-
-    /*
-    |--------------------------------------------------------------------------
-    | Default System Prompt
-    |--------------------------------------------------------------------------
-    |
-    | This prompt is sent at the beginning of each conversation to instruct
-    | the AI on its role, personality, and response guidelines.
-    |
-    */
-
-    'system_prompt' => env('AI_SYSTEM_PROMPT', 'You are a helpful assistant specialized in web development, graphic design, and related software for teams. Provide clear, concise, and accurate information to assist users with their queries in these domains.'),
+    'default_handler' => env('AI_DEFAULT_HANDLER', 'gemini:gemini-2.5-flash-lite'),
 
     /*
     |--------------------------------------------------------------------------
@@ -73,6 +42,25 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Task-Specific AI Configuration
+    |--------------------------------------------------------------------------
+    |
+    | Here you can define specific providers and models for different tasks.
+    | If a task is not defined here or the value is null, it will fall back
+    | to the `default_handler`.
+    |
+    | Supported tasks: 'chat', 'explanation', 'summarize', 'suggest'
+    |
+    */
+    'tasks' => [
+        'chat' => env('AI_CHAT_HANDLER'),
+        'explanation' => env('AI_EXPLANATION_HANDLER'),
+        'summarize' => env('AI_SUMMARIZE_HANDLER'),
+        'suggest' => env('AI_SUGGEST_HANDLER'),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Predefined Prompts
     |--------------------------------------------------------------------------
     | Here you may define some predefined prompts that can be used
@@ -80,6 +68,14 @@ return [
     |
     */
     'prompts' => [
+        'system_prompt' => env(
+            'AI_SYSTEM_PROMPT',
+            <<<PROMPT
+        You are a helpful assistant specialized in web development, graphic design, 
+        and related software for teams. Provide clear, concise, and accurate information
+        to assist users with their queries in these domains. 
+        PROMPT
+        ),
         'explanation' => <<<PROMPT
             Leg kort (in niet al te veel woorden), en in zo eenvoudig mogelijke bewoordingen, 
             voor een leek (de lezer aan wie je dit uitlegt), uit wat :input betekent - in zover 
