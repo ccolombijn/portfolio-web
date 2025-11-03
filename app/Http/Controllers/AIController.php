@@ -28,7 +28,7 @@ final class AIController extends Controller
             'history' => ['sometimes', 'array'],
             'stream' => ['sometimes', 'boolean'],
             'model' => ['sometimes', 'string'],
-            'provider' => ['sometimes', 'string', 'in:openai,gemini'],
+            'provider' => ['sometimes', 'string', 'in:openai,gemini,anthropic,mistral'],
         ]);
 
         return $this->aiRepository->generate($data, $data['provider'] ?? null);
@@ -49,10 +49,12 @@ final class AIController extends Controller
      */    public function suggestPrompts(Request $request): JsonResponse
     {
         $data = $request->validate([
-            'history' => ['required', 'array'],
+            'history' => ['sometimes', 'array'],
             'file_paths' => ['sometimes', 'array'],
             'profile' => ['sometimes', 'string'],
         ]);
+
+        $data['prompt'] = 'suggest';
 
         $suggestions = $this->aiRepository->suggestPrompts($data);
 

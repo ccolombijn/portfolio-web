@@ -10,8 +10,8 @@ use Gemini\Client as GeminiClient;
 use Gemini\Data\Content;
 use Gemini\Enums\Role;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 use InvalidArgumentException;
 use Js;
 use OpenAI\Client as OpenAIClient;
@@ -19,13 +19,15 @@ use Spatie\PdfToText\Exceptions\BinaryNotFoundException;
 use Spatie\PdfToText\Pdf;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 use Throwable;
+use HelgeSverre\Mistral\Mistral;
 
 final class AIRepository implements AIRepositoryInterface
 {
     public function __construct(
         private readonly OpenAIClient $openai,
         private readonly GeminiClient $gemini,
-        private readonly AnthropicClient $anthropic
+        private readonly AnthropicClient $anthropic,
+        private readonly Mistral $mistral,
     ) {}
 
     /**
@@ -45,8 +47,8 @@ final class AIRepository implements AIRepositoryInterface
         $files = $storage->files($path);
 
         return collect($files)
-            ->filter(fn ($file) => pathinfo($file, PATHINFO_EXTENSION) === 'json')
-            ->map(fn ($file) => pathinfo($file, PATHINFO_FILENAME))
+            ->filter(fn($file) => pathinfo($file, PATHINFO_EXTENSION) === 'json')
+            ->map(fn($file) => pathinfo($file, PATHINFO_FILENAME))
             ->values()
             ->all();
     }
@@ -61,7 +63,8 @@ final class AIRepository implements AIRepositoryInterface
         return match ($provider) {
             'openai' => $this->generateWithOpenAI($data),
             'gemini' => $this->generateWithGemini($data),
-            'anthropic' => $this->generateWithAnthropic($data),	
+            'anthropic' => $this->generateWithAnthropic($data),
+            'mistral' => $this->generateWithMistral($data),
             default => throw new InvalidArgumentException("Unsupported AI provider: [{$provider}]")
         };
     }
@@ -79,15 +82,9 @@ final class AIRepository implements AIRepositoryInterface
                 return $this->streamOpenAIResponse($model, $messages);
             }
 
-            $result = $this->openai->chat()->create([
-                'model' => $model,
-                'messages' => $messages,
-            ]);
-
-            return response()->json(['response' => $result->choices[0]->message->content]);
+            return $this->generateResponse('openai', $model, $messages);
         } catch (Throwable $e) {
-            Log::error('Failed to get a response from OpenAI.', ['exception' => $e]);
-            return response()->json(['error' => 'Failed to get a response from OpenAI.'], 500);
+            return $this->handleErrorResponse($e, 'OpenAI');
         }
     }
     /**
@@ -121,35 +118,11 @@ final class AIRepository implements AIRepositoryInterface
             'messages' => $messages,
         ]);
 
-        return new StreamedResponse(function () use ($stream) {
-            try {
-                foreach ($stream as $result) {
-                    $content = $result->choices[0]->delta->content;
-                    if (null !== $content) {
-                        echo $content;
-                        if (ob_get_level() > 0) {
-                            ob_flush();
-                        }
-                        flush();
-                    }
-                }
-            } catch (Throwable $e) {
-                Log::error('An unexpected error occurred during the OpenAI stream.', ['exception' => $e]);
-                echo "[ERROR: An unexpected error occurred during the stream.]";
-                if (ob_get_level() > 0) {
-                    ob_flush();
-                }
-                flush();
-            }
-        }, 200, [
-            'Content-Type' => 'text/plain',
-            'X-Accel-Buffering' => 'no',
-            'Cache-Control' => 'no-cache',
-        ]);
+        return $this->streamResponse($stream, fn($chunk) => $chunk->choices[0]->delta->content ?? null);
     }
 
     /**
-     * Handles generation using the Gemini client without streaming.
+     * Handles generation using the Gemini client.
      */
     private function generateWithGemini(array $data): JsonResponse|StreamedResponse
     {
@@ -161,11 +134,9 @@ final class AIRepository implements AIRepositoryInterface
                 return $this->streamGeminiResponse($model, $prompt);
             }
             // Non-streaming response
-            $result = $this->gemini->generativeModel($model)->generateContent($prompt);
-            return response()->json(['response' => $result->text()]);
+            return $this->generateResponse('gemini', $model, $prompt);
         } catch (Throwable $e) {
-            Log::error('Failed to get a response from Gemini.', ['exception' => $e]);
-            return response()->json(['error' => 'Failed to get a response from Gemini.'], 500);
+            return $this->handleErrorResponse($e, 'Gemini');
         }
     }
     /**
@@ -178,30 +149,7 @@ final class AIRepository implements AIRepositoryInterface
             ? $this->gemini->generativeModel($model)->streamGenerateContent(...$prompt)
             : $this->gemini->generativeModel($model)->streamGenerateContent($prompt);
 
-        return new StreamedResponse(function () use ($stream) {
-            try {
-                foreach ($stream as $response) {
-                    if (! empty($text = $response->text())) {
-                        echo $text;
-                        if (ob_get_level() > 0) {
-                            ob_flush();
-                        }
-                        flush();
-                    }
-                }
-            } catch (Throwable $e) {
-                Log::error('An unexpected error occurred during the Gemini stream.', ['exception' => $e]);
-                echo "[ERROR: An unexpected error occurred during the stream.]";
-                if (ob_get_level() > 0) {
-                    ob_flush();
-                }
-                flush();
-            }
-        }, 200, [
-            'Content-Type' => 'text/plain',
-            'X-Accel-Buffering' => 'no',
-            'Cache-Control' => 'no-cache',
-        ]);
+        return $this->streamResponse($stream, fn($chunk) => $chunk->text());
     }
 
     /**
@@ -250,17 +198,9 @@ final class AIRepository implements AIRepositoryInterface
                 return $this->streamAnthropicResponse($model, $messages, $systemPrompt);
             }
 
-            $result = $this->anthropic->messages()->create([
-                'model' => $model,
-                'system' => $systemPrompt,
-                'messages' => $messages,
-                'max_tokens' => 4096, // Anthropic requires max_tokens
-            ]);
-
-            return response()->json(['response' => $result->content[0]->text]);
+            return $this->generateResponse('anthropic', $model, $messages, $systemPrompt);
         } catch (Throwable $e) {
-            Log::error('Failed to get a response from Anthropic.', ['exception' => $e]);
-            return response()->json(['error' => 'Failed to get a response from Anthropic.'], 500);
+            return $this->handleErrorResponse($e, 'Anthropic');
         }
     }
 
@@ -276,33 +216,7 @@ final class AIRepository implements AIRepositoryInterface
             'max_tokens' => 4096,
         ]);
 
-        return new StreamedResponse(function () use ($stream) {
-            try {
-                foreach ($stream as $result) {
-                    if ($result->type === 'content_block_delta') {
-                        $content = $result->delta->text;
-                        if (null !== $content) {
-                            echo $content;
-                            if (ob_get_level() > 0) {
-                                ob_flush();
-                            }
-                            flush();
-                        }
-                    }
-                }
-            } catch (Throwable $e) {
-                Log::error('An unexpected error occurred during the Anthropic stream.', ['exception' => $e]);
-                echo "[ERROR: An unexpected error occurred during the stream.]";
-                if (ob_get_level() > 0) {
-                    ob_flush();
-                }
-                flush();
-            }
-        }, 200, [
-            'Content-Type' => 'text/plain',
-            'X-Accel-Buffering' => 'no',
-            'Cache-Control' => 'no-cache',
-        ]);
+        return $this->streamResponse($stream, fn($chunk) => $chunk->type === 'content_block_delta' ? $chunk->delta->text : null);
     }
 
     private function buildAnthropicMessages(array $data): array
@@ -345,6 +259,130 @@ final class AIRepository implements AIRepositoryInterface
     }
 
     /**
+     * Handles generation using the Mistral client.
+     */
+    private function generateWithMistral(array $data): JsonResponse|StreamedResponse
+    {
+        try {
+            $model = $data['model'] ?? config('ai.models.mistral', 'mistral-large-latest');
+            $messages = $this->buildMistralMessages($data);
+
+            if (! empty($data['stream'])) {
+                return $this->streamMistralResponse($model, $messages);
+            }
+
+            return $this->generateResponse('mistral', $model, $messages);
+        } catch (Throwable $e) {
+            return $this->handleErrorResponse($e, 'Mistral');
+        }
+    }
+
+    /**
+     * Handles streaming generation using the Mistral client.
+     */
+    private function streamMistralResponse(string $model, array $messages): StreamedResponse
+    {
+        $stream = $this->mistral->chat()->createStreamed([
+            'model' => $model,
+            'messages' => $messages,
+        ]);
+
+        return $this->streamResponse($stream, fn($chunk) => $chunk->choices[0]->delta->content ?? null);
+    }
+
+    /**
+     * Build Mistral messages with given data. This is identical to OpenAI's structure.
+     */
+    private function buildMistralMessages(array $data): array
+    {
+        // The helgesverre/mistral package uses the same message format as OpenAI's
+        return $this->buildOpenAIMessages($data);
+    }
+
+
+    /**
+     * Generic method to handle non-streaming responses from any provider.
+     */
+    private function generateResponse(string $provider, string $model, array|string $prompt, ?string $systemPrompt = null): JsonResponse
+    {
+        $responseText = match ($provider) {
+            'openai' => $this->openai->chat()->create([
+                'model' => $model,
+                'messages' => $prompt,
+            ])->choices[0]->message->content,
+
+            'gemini' => $this->gemini->generativeModel($model)->generateContent($prompt)->text(),
+
+            'anthropic' => $this->anthropic->messages()->create([
+                'model' => $model,
+                'system' => $systemPrompt,
+                'messages' => $prompt,
+                'max_tokens' => 4096,
+            ])->content[0]->text,
+
+            'mistral' => (function () use ($model, $prompt) {
+                /** @var \HelgeSverre\Mistral\Responses\Chat\CreateResponse $response */
+                $response = $this->mistral->chat()->create(['model' => $model, 'messages' => $prompt]);
+
+                return $response->choices[0]->message->content;
+            })(),
+
+            default => throw new InvalidArgumentException("Unsupported AI provider for non-streaming generation: [{$provider}]"),
+        };
+
+        return response()->json(['response' => $responseText]);
+    }
+
+
+    /**
+     * Generic method to handle streaming responses from any provider.
+     */
+    private function streamResponse(iterable $stream, callable $textExtractor): StreamedResponse
+    {
+        return new StreamedResponse(function () use ($stream, $textExtractor) {
+            try {
+                foreach ($stream as $chunk) {
+                    $text = $textExtractor($chunk);
+                    if (! empty($text)) {
+                        echo $text;
+                        if (ob_get_level() > 0) {
+                            ob_flush();
+                        }
+                        flush();
+                    }
+                }
+            } catch (Throwable $e) {
+                Log::error('An unexpected error occurred during the stream.', ['exception' => $e]);
+                echo "[ERROR: An unexpected error occurred during the stream.]";
+                if (ob_get_level() > 0) {
+                    ob_flush();
+                }
+                flush();
+            }
+        }, 200, [
+            'Content-Type' => 'text/plain',
+            'X-Accel-Buffering' => 'no',
+            'Cache-Control' => 'no-cache',
+        ]);
+    }
+
+    /**
+     * Handles exceptions and returns a standardized JSON error response.
+     */
+    private function handleErrorResponse(Throwable $e, string $provider): JsonResponse
+    {
+        Log::error("Failed to get a response from {$provider}.", ['exception' => $e]);
+
+        $message = config('app.debug')
+            ? $e->getMessage()
+            : "Failed to get a response from {$provider}. Please try again later.";
+
+        return response()->json(['error' => $message], 500);
+    }
+
+
+
+    /**
      * Build the base prompt including file contexts.
      */
     private function buildBasePrompt(array $data): string
@@ -358,7 +396,7 @@ final class AIRepository implements AIRepositoryInterface
      * @return array{system_prompt: string, file_context: string, prompt: string}
      */
     private function buildBasePromptParts(array $data): array
-    {   
+    {
         $profileName = $data['profile'] ?? config('ai.default_profile');
         $profileData = null;
         if ($profileName) {
@@ -372,6 +410,11 @@ final class AIRepository implements AIRepositoryInterface
         if ($isPredefinedPrompt) {
             $promptTemplate = config('ai.prompts.' . $prompt);
             $prompt = str_replace(':input', $data['input'] ?? '', $promptTemplate);
+        }
+
+        if (str_contains($prompt, ':history')) {
+            $historyString = collect($data['history'] ?? [])->map(fn($item) => ($item['role'] ?? 'user') . ': ' . ($item['text'] ?? ''))->implode("\n");
+            $prompt = str_replace(':history', $historyString, $prompt);
         }
 
         $fileContext = '';
@@ -459,6 +502,32 @@ final class AIRepository implements AIRepositoryInterface
 
         return $storage->get($filePath);
     }
+
+    /**
+     * Get text response from the specified provider.
+     */
+    private function getTextResponse(string $provider, string $model, string $prompt): string
+    {
+        return match ($provider) {
+            'openai' => $this->openai->chat()->create([
+                'model' => $model,
+                'messages' => [['role' => 'user', 'content' => $prompt]],
+            ])->choices[0]->message->content,
+            'gemini' => $this->gemini->generativeModel($model)->generateContent($prompt)->text(),
+            'anthropic' => $this->anthropic->messages()->create([
+                'model' => $model,
+                'messages' => [['role' => 'user', 'content' => $prompt]],
+                'max_tokens' => 1024,
+            ])->content[0]->text,
+            'mistral' => (function () use ($model, $prompt) {
+                /** @var \HelgeSverre\Mistral\Responses\Chat\CreateResponse $response */
+                $response = $this->mistral->chat()->create(['model' => $model, 'messages' => [['role' => 'user', 'content' => $prompt]]]);
+
+                return $response->choices[0]->message->content;
+            })(),
+            default => throw new InvalidArgumentException("Unsupported AI provider for prompt suggestions: [{$provider}]"),
+        };
+    }
     /**
      * Generate prompt suggestions based on the chat context.
      */
@@ -468,45 +537,11 @@ final class AIRepository implements AIRepositoryInterface
             $provider = config('ai.default_provider', 'gemini');
             $model = config('ai.models.' . $provider, 'gemini-1.5-flash-latest');
 
-            // Build a concise history string
-            $historyString = collect($data['history'] ?? [])
-                ->map(fn ($item) => ($item['role'] ?? 'user') . ': ' . ($item['text'] ?? ''))
-                ->implode("\n");
+            $promptForSuggestions = $this->buildBasePrompt($data);
 
-            // Build file context string
-            $fileContext = '';
-            $filePaths = $data['file_paths'] ?? [];
-            if (!empty($filePaths)) {
-                $fileNames = implode(', ', array_map('basename', $filePaths));
-                $fileContext = "The user has provided the following files for context: {$fileNames}.";
-            }
+            $responseText = $this->getTextResponse($provider, $model, $promptForSuggestions);
 
-            // Build profile context string
-            $profileContext = '';
-            if (!empty($data['profile'])) {
-                $profileContext = "The current AI profile is '{$data['profile']}'.";
-            }
-
-            $promptForSuggestions = <<<PROMPT
-            You are an assistant that suggests relevant next prompts for a user in a chat conversation.
-            Based on the provided chat history and context, suggest up to 3 short, relevant follow-up questions or prompts.
-            The suggestions should be things the user might want to ask next.
-            Return a JSON object with a single key "suggestions" which is an array of strings. For example: {"suggestions": ["What is a closure?", "Explain promises.", "How do I use flexbox?"]}
-            If you have no suggestions, the "suggestions" array should be empty.
-            Do not add any other text, just the JSON object.
-
-            Context:
-            {$profileContext}
-            {$fileContext}
-
-            Chat History:
-            ---
-            {$historyString}
-            ---
-            PROMPT;
-
-            $result = $this->gemini->generativeModel($model)->generateContent($promptForSuggestions);
-            $suggestionsJson = preg_replace('/^```json\s*|\s*```$/', '', $result->text());
+            $suggestionsJson = preg_replace('/^```json\s*|\s*```$/', '', $responseText);
 
             $decoded = json_decode(trim($suggestionsJson), true);
 
@@ -522,4 +557,3 @@ final class AIRepository implements AIRepositoryInterface
         }
     }
 }
-

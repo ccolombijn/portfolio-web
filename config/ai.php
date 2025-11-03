@@ -13,7 +13,7 @@ return [
     | you add to the AIRepository.
     |
     | Supported: "openai", "gemini"
-    |
+    | Supported: "openai", "gemini", "anthropic", "mistral"
     */
 
     'default_provider' => env('AI_PROVIDER', 'gemini'),
@@ -32,6 +32,7 @@ return [
         'gemini' => env('AI_MODEL_GEMINI', 'gemini-2.5-flash-lite'),
         'openai' => env('AI_MODEL_OPENAI', 'gpt-5-nano'),
         'anthropic' => env('AI__MODEL_ANTHROPIC', 'claude-3-haiku-20240307'),
+        'mistral' => env('AI_MODEL_MISTRAL', 'mistral-large-latest'),
     ],
 
     /*
@@ -79,7 +80,29 @@ return [
     |
     */
     'prompts' => [
-        'explanation' => 'Leg kort (in niet al te veel woorden), en in zo eenvoudig mogelijke bewoordingen, voor een leek (de lezer aan wie je dit uitlegt), uit wat :input betekent - in zover relevant, met betrekking to web development, grafische vormgeving of aanverwante software voor teams (je hoeft dit verder niet te benoemen)',
-        'summarize' => 'Geef een korte samenvatting (in niet al te veel woorden, maximaal enkele regels) van de volgende tekst alsof ik het aan iemand vertel over mijn tekst : :input',
+        'explanation' => <<<PROMPT
+            Leg kort (in niet al te veel woorden), en in zo eenvoudig mogelijke bewoordingen, 
+            voor een leek (de lezer aan wie je dit uitlegt), uit wat :input betekent - in zover 
+            relevant, met betrekking to web development, grafische vormgeving of aanverwante software 
+            voor teams (je hoeft dit verder niet te benoemen)
+            PROMPT,
+        'summarize' => <<<PROMPT
+            Geef een korte samenvatting (in niet al te veel woorden, maximaal enkele regels) van de volgende tekst 
+            alsof ik het aan iemand vertel over mijn tekst : :input
+            PROMPT,
+        'suggest' => <<<PROMPT
+            You are an assistant that suggests relevant next prompts for a user in a chat conversation.
+            Based on the provided chat history and context, suggest up to 3 short, relevant follow-up questions or prompts.
+            The suggestions should be things the user might want to ask next.
+            The suggestions should be in the same language as the last user message in the history.
+            Return a JSON object with a single key "suggestions" which is an array of strings. For example: {"suggestions": ["What is a closure?", "Explain promises.", "How do I use flexbox?"]}
+            If you have no suggestions, the "suggestions" array should be empty.
+            If the chat history is empty, provide some general conversation starters related to web development, graphic design, or team software.
+            Do not add any other text, just the JSON object.
+            Chat History:
+            ---
+            :history
+            ---
+            PROMPT,
     ],
 ];

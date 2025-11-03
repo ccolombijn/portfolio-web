@@ -4,13 +4,21 @@
 
     &-input {
         @apply grid grid-cols-12 gap-2 mb-4;
-        input {
-            // Enhanced input styling with focus state
-            @apply col-span-10 p-2 border border-gray-300 rounded-lg focus:outline-none;
+
+        .prompt-wrapper {
+            @apply col-span-full flex items-center relative;
+           // @extend .btn--outline; // Use @extend to inherit styles safely
+            @apply border-1 border-solid border-gray-300  hover:border-gray-400;
+            @apply p-4 rounded-xl shadow-sm; // Reset padding from .btn--outline
         }
-        button {
-            // Styled button for better appearance and hover effect
-            @apply col-span-2 rounded-lg duration-200;
+
+        #user-input {
+            @apply flex-grow p-2 focus:outline-none bg-transparent;
+            min-height: 40px;
+        }
+
+        .prompt-btn {
+            @apply text-gray-500 hover:text-blue-500 px-3;
         }
     }
 

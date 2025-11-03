@@ -1,6 +1,6 @@
 .btn {
     @apply inline-flex p-4 mt-4 text-center min-w-[250px] rounded-xl justify-center ml-4 
-    backdrop-blur-xs hover:bg-[#ffffff70] hover:text-slate-900 hover:mix-blend-screen hover:border-none font-medium shadow-sm;
+    backdrop-blur-xs hover:bg-[#ffffff70] hover:text-slate-900 hover:mix-blend-screen font-medium shadow-sm;
     i {
         @apply pt-[5px] pr-[5px];
     }
@@ -11,7 +11,7 @@
         @apply bg-gradient-to-b from-white to-[#ffffff70] text-slate-900 mix-blend-screen;
     }
     &--outline {
-        @apply border-1 border-solid border-gray-500;
+        @apply border-1 border-solid border-gray-300  hover:border-gray-400;
         &-white {
             @apply backdrop-blur-xs shadow-white bg-gradient-to-b from-transparent to-[#ffffff40];
         }
