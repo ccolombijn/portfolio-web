@@ -27,8 +27,10 @@ foreach (collect(app('pages.data'))->all() as $page) {
 Route::post('/ai-generate', [AIController::class, 'generate'])->name('ai.generate');
 Route::get('/ai-profiles', [AIController::class, 'getProfiles'])->name('ai.profiles');
 Route::post('/ai-suggest', [AIController::class, 'suggestPrompts'])->name('ai.suggestPrompts');
+Route::get('/ai-models', [AIController::class, 'getModels'])->name('ai.models');
 
 
+// Contact Routes
 Route::post('/contact', [ContactController::class, 'submit'])->name('contact.submit');
 Route::get('/download/{file}', [ContactController::class, 'download'])->name('contact.download');
 Auth::routes();

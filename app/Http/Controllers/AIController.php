@@ -46,7 +46,8 @@ final class AIController extends Controller
 
     /**
      * Generate prompt suggestions based on the chat context.
-     */    public function suggestPrompts(Request $request): JsonResponse
+     */
+    public function suggestPrompts(Request $request): JsonResponse
     {
         $data = $request->validate([
             'history' => ['sometimes', 'array'],
@@ -59,5 +60,15 @@ final class AIController extends Controller
         $suggestions = $this->aiRepository->suggestPrompts($data);
 
         return response()->json(['suggestions' => $suggestions]);
+    }
+
+    /**
+     * Get available AI models from different providers.
+     */
+    public function getModels(): JsonResponse
+    {
+        $models = $this->aiRepository->getAvailableModels();
+
+        return response()->json(['models' => $models]);
     }
 }

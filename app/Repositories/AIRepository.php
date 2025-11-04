@@ -11,6 +11,7 @@ use Gemini\Data\Content;
 use Gemini\Enums\Role;
 use HelgeSverre\Mistral\Mistral as MistralClient;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use InvalidArgumentException;
@@ -52,6 +53,64 @@ final class AIRepository implements AIRepositoryInterface
             ->all();
     }
 
+    /**
+     * Get all available models from all configured providers.
+     */
+    public function getAvailableModels(): array
+    {
+        $allModels = [];
+
+        // OpenAI
+        try {
+            $response = $this->openai->models()->list();
+            $allModels['openai'] = collect($response->data)
+                ->map(fn($model) => ['id' => $model->id, 'owned_by' => $model->ownedBy])
+                ->sortBy('id')->values()->all();
+        } catch (Throwable $e) {
+            Log::error('Failed to retrieve models from OpenAI.', ['exception' => $e]);
+            $allModels['openai'] = [];
+        }
+
+        // Gemini
+        try {
+            $response = $this->gemini->models()->list();
+            $allModels['gemini'] = collect($response->models)
+                ->map(fn($model) => ['id' => $model->name, 'display_name' => $model->displayName])
+                ->sortBy('id')->values()->all();
+        } catch (Throwable $e) {
+            Log::error('Failed to retrieve models from Gemini.', ['exception' => $e]);
+            $allModels['gemini'] = [];
+        }
+
+        // Mistral
+        try {
+            $response = $this->mistral->models()->list();
+            $modelListDto = $response->dtoOrFail();
+            $allModels['mistral'] = collect($modelListDto->data)->sortBy('id')->values()->all();
+        } catch (Throwable $e) {
+            Log::error('Failed to retrieve models from Mistral.', ['exception' => $e]);
+            $allModels['mistral'] = [];
+        }
+
+        // Anthropic
+        try {
+            // The official SDK does not seem to have a model list method.
+            // We will use a direct API call as the primary method.
+            $response = Http::withHeaders([
+                'x-api-key' => config('services.anthropic.api_key'),
+                'anthropic-version' => config('services.anthropic.version', '2023-06-01'),
+            ])->get('https://api.anthropic.com/v1/models');
+
+            $response->throw(); // Throw an exception for 4xx/5xx responses
+
+            $allModels['anthropic'] = $response->json('data', []);
+        } catch (Throwable $e) {
+            Log::error('Failed to retrieve models from Anthropic.', ['exception' => $e]);
+            $allModels['anthropic'] = [];
+        }
+
+        return $allModels;
+    }
     /**
      * Generate AI response based on the specified provider.
      */

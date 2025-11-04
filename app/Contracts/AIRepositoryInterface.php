@@ -20,6 +20,11 @@ interface AIRepositoryInterface
 
     /**
      * @return array<string>
-     */ 
+     */
     public function suggestPrompts(array $context): array;
+
+    /**
+     * Get all available models from all configured providers.
+     */
+    public function getAvailableModels(): array;
 }
