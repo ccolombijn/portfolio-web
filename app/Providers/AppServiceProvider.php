@@ -95,21 +95,6 @@ class AppServiceProvider extends ServiceProvider
             ->needs('$contactData')
             ->give($contactData);
 
-        // $this->app->when([
-        //     PageController::class,
-        //     PortfolioController::class,
-        //     ContactController::class,
-        //     GeminiController::class,
-        //     DashboardController::class,
-        //     AdminPageController::class
-        // ])
-        //     ->needs('$content')
-        //     ->give($contentData);
-
-        // $this->app->when(Controller::class)
-        //     ->needs('$content')
-        //     ->give($contentData);
-
         $this->app->when([
             PortfolioController::class,
             DashboardController::class,

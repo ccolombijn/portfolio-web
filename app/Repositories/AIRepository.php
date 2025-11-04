@@ -9,17 +9,16 @@ use App\Contracts\AIRepositoryInterface;
 use Gemini\Client as GeminiClient;
 use Gemini\Data\Content;
 use Gemini\Enums\Role;
+use HelgeSverre\Mistral\Mistral as MistralClient;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use InvalidArgumentException;
-use Js;
 use OpenAI\Client as OpenAIClient;
 use Spatie\PdfToText\Exceptions\BinaryNotFoundException;
 use Spatie\PdfToText\Pdf;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 use Throwable;
-use HelgeSverre\Mistral\Mistral;
 
 final class AIRepository implements AIRepositoryInterface
 {
@@ -27,7 +26,7 @@ final class AIRepository implements AIRepositoryInterface
         private readonly OpenAIClient $openai,
         private readonly GeminiClient $gemini,
         private readonly AnthropicClient $anthropic,
-        private readonly Mistral $mistral,
+        private readonly MistralClient $mistral,
     ) {}
 
     /**

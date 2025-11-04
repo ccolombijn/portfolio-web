@@ -3,7 +3,7 @@
 namespace App\Providers;
 
 use App\Repositories\AIRepository;
-use App\Repositories\Contracts\AIRepositoryInterface;
+use App\Contracts\AIRepositoryInterface;
 use Illuminate\Support\ServiceProvider;
 use App\Repositories\StorageFileManagerRepository;
 use App\Contracts\FileManagerInterface;

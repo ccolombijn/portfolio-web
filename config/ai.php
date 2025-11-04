@@ -11,7 +11,7 @@ return [
     | This option controls the default AI handler (provider and model) that
     | will be used by the application, in the format 'provider:model'.
     |
-    | e.g., 'gemini:gemini-1.5-flash-latest', 'openai:gpt-4o-mini'
+    | e.g., 'gemini:gemini-2.5-flash-lite', 'openai:gpt-4o-mini'
     */
 
     'default_handler' => env('AI_DEFAULT_HANDLER', 'gemini:gemini-2.5-flash-lite'),
@@ -33,12 +33,12 @@ return [
     | Default AI Profile
     |--------------------------------------------------------------------------
     | Here you may specify the default AI profile to be used
-    | throughout the application. This profile can define specific
-    | settings or behaviors for AI interactions.
+    | throughout the application, loaded from storage/app/public/json/profiles. 
+    | This profile can define specific settings or behaviors for AI interactions.
     |
     */
 
-    'default_profile' => env('AI_DEFAULT_PROFILE', 'christoffel'),
+    'default_profile' => env('AI_DEFAULT_PROFILE', 'assistant'),
 
     /*
     |--------------------------------------------------------------------------
@@ -71,10 +71,10 @@ return [
         'system_prompt' => env(
             'AI_SYSTEM_PROMPT',
             <<<PROMPT
-        You are a helpful assistant specialized in web development, graphic design, 
-        and related software for teams. Provide clear, concise, and accurate information
-        to assist users with their queries in these domains. 
-        PROMPT
+            You are a helpful assistant specialized in web development, graphic design, 
+            and related software for teams. Provide clear, concise, and accurate information
+            to assist users with their queries in these domains. 
+            PROMPT
         ),
         'explanation' => <<<PROMPT
             Leg kort (in niet al te veel woorden), en in zo eenvoudig mogelijke bewoordingen, 

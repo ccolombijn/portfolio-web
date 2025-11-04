@@ -3,7 +3,6 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\PageController;
 use App\Http\Controllers\ContactController;
-use App\Http\Controllers\GeminiController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\FilesController;
 use App\Http\Controllers\Admin\PageController as AdminPageController;
