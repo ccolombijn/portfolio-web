@@ -22,10 +22,9 @@ class PageController extends Controller
 
         $content = [];
         $parts = $page['parts'] ?? config('page.default_parts');
-        
+
         foreach ($parts as $part) { 
             $content[$part] = $this->pageContentService->getRenderedPartContent($part, $page);
-
         }
 
         $view = $page['view'] ?? 'pages.default';

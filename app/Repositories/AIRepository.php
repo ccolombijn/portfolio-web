@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Repositories;
 
 use Anthropic\Client as AnthropicClient;
+use App\Services\PomlService;
 use App\Contracts\AIRepositoryInterface;
 use Gemini\Client as GeminiClient;
 use Gemini\Data\Content;
@@ -28,6 +29,8 @@ final class AIRepository implements AIRepositoryInterface
         private readonly GeminiClient $gemini,
         private readonly AnthropicClient $anthropic,
         private readonly MistralClient $mistral,
+        // PomlService integration for future use
+        private readonly PomlService $pomlService,
     ) {}
 
     /**
@@ -471,6 +474,11 @@ final class AIRepository implements AIRepositoryInterface
     private function buildBasePrompt(array $data): string
     {
         $parts = $this->buildBasePromptParts($data);
+        // If the prompt was rendered by POML service, it's a complete prompt.
+        // We can return it directly, bypassing the standard assembly.
+        if (isset($parts['poml_rendered'])) {
+            return $parts['poml_rendered'];
+        }
 
         return trim(implode("\n\n", array_filter($parts)));
     }
@@ -488,10 +496,39 @@ final class AIRepository implements AIRepositoryInterface
 
         $prompt = (string) ($data['prompt'] ?? '');
         $isPredefinedPrompt = array_key_exists($prompt, config('ai.prompts', []));
-
+        /** 
+        * Handle predefined prompts and POML templates
+        * @example 
+        * prompt: "code_qa" <-- predefined prompt key; returns poml:ask
+        * input: "Your question about the code goes here."
+        * file_paths: ['path/to/your/codefile.php', 'path/to/another/file.js']
+        */
         // If the prompt is a key for a predefined prompt, get the full text.
         if ($isPredefinedPrompt) {
             $promptTemplate = config('ai.prompts.' . $prompt);
+            // Check if the prompt is a POML template reference
+            if (is_string($promptTemplate) && str_starts_with($promptTemplate, 'poml:')) {
+                $templateName = substr($promptTemplate, 5);
+
+                $defaultFiles = $profileData['files'] ?? config('ai.default_files', []);
+                $requestFiles = $data['file_paths'] ?? [];
+                $allFiles = array_unique(array_merge($defaultFiles, $requestFiles));
+
+                $absoluteFilePaths = [];
+                foreach ($allFiles as $filePath) {
+                    // Use the repository's own validation logic to get a safe, absolute path
+                    if (Storage::disk('public')->exists(str_replace('..', '', $filePath))) {
+                        $absoluteFilePaths[] = Storage::disk('public')->path(str_replace('..', '', $filePath));
+                    }
+                }
+
+                $pomlVariables = [
+                    'prompt' => $data['input'] ?? '',
+                    'files' => $absoluteFilePaths,
+                ];
+
+                return ['poml_rendered' => $this->pomlService->render($templateName, $pomlVariables)];
+            }
             $prompt = str_replace(':input', $data['input'] ?? '', $promptTemplate);
         }
 

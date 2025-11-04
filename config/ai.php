@@ -68,6 +68,7 @@ return [
     |
     */
     'prompts' => [
+        // Prompt used to set the behavior of the AI assistant in chat interactions
         'system_prompt' => env(
             'AI_SYSTEM_PROMPT',
             <<<PROMPT
@@ -76,16 +77,20 @@ return [
             to assist users with their queries in these domains. 
             PROMPT
         ),
+        // Prompt for explaining concepts in simple terms
         'explanation' => <<<PROMPT
-            Leg kort (in niet al te veel woorden), en in zo eenvoudig mogelijke bewoordingen, 
-            voor een leek (de lezer aan wie je dit uitlegt), uit wat :input betekent - in zover 
-            relevant, met betrekking to web development, grafische vormgeving of aanverwante software 
-            voor teams (je hoeft dit verder niet te benoemen)
+            Briefly explain (in a few words) and in as simple terms as possible,
+            for a layperson (the reader you're explaining this to), what :input means—as relevant,
+            with respect to web development, graphic design, or related software
+            for teams (you don't need to specify this further). Use analogies where appropriate.
+            Always use the dutch language.
             PROMPT,
+        // Prompt for summarizing text
         'summarize' => <<<PROMPT
-            Geef een korte samenvatting (in niet al te veel woorden, maximaal enkele regels) van de volgende tekst 
-            alsof ik het aan iemand vertel over mijn tekst : :input
+            Provide a brief summary (in a few words, no more than a few lines) of the following text.
+            In the nguge o the text as if I were telling someone about my text. : :input
             PROMPT,
+        // Prompt for suggesting relevant next prompts based on chat history
         'suggest' => <<<PROMPT
             You are an assistant that suggests relevant next prompts for a user in a chat conversation.
             Based on the provided chat history and context, suggest up to 3 short, relevant follow-up questions or prompts.
@@ -100,5 +105,10 @@ return [
             :history
             ---
             PROMPT,
+        // Prompt for using the POML-based Code-QA assistant
+        'code_qa' => 'poml:ask',
+        // Prompt for using the POML-based File Explorer assistant
+        'file_explorer' => 'poml:file_explorer',
+
     ],
 ];
