@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Repositories;
 
 use Anthropic\Client as AnthropicClient;
+use App\Traits\FilePathResolver;
 use App\Services\PomlService;
 use App\Contracts\AIRepositoryInterface;
 use Gemini\Client as GeminiClient;
@@ -29,7 +30,6 @@ final class AIRepository implements AIRepositoryInterface
         private readonly GeminiClient $gemini,
         private readonly AnthropicClient $anthropic,
         private readonly MistralClient $mistral,
-        // PomlService integration for future use
         private readonly PomlService $pomlService,
     ) {}
 
@@ -482,9 +482,11 @@ final class AIRepository implements AIRepositoryInterface
 
         return trim(implode("\n\n", array_filter($parts)));
     }
+    
+    use FilePathResolver;
     /**
-     * Build prompt with given data
-     * @return array{system_prompt: string, file_context: string, prompt: string}
+     * Build base prompt parts including system prompt, file context, and main prompt.
+     * @return array{system_prompt: string, file_context: string, prompt: string}|array{poml_rendered: string}
      */
     private function buildBasePromptParts(array $data): array
     {
@@ -514,17 +516,17 @@ final class AIRepository implements AIRepositoryInterface
                 $requestFiles = $data['file_paths'] ?? [];
                 $allFiles = array_unique(array_merge($defaultFiles, $requestFiles));
 
-                $absoluteFilePaths = [];
-                foreach ($allFiles as $filePath) {
-                    // Use the repository's own validation logic to get a safe, absolute path
-                    if (Storage::disk('public')->exists(str_replace('..', '', $filePath))) {
-                        $absoluteFilePaths[] = Storage::disk('public')->path(str_replace('..', '', $filePath));
-                    }
-                }
+                // $absoluteFilePaths = [];
+                // foreach ($allFiles as $filePath) {
+                //     // Use the repository's own validation logic to get a safe, absolute path
+                //     if (Storage::disk('public')->exists(str_replace('..', '', $filePath))) {
+                //         $absoluteFilePaths[] = Storage::disk('public')->path(str_replace('..', '', $filePath));
+                //     }
+                // }
 
                 $pomlVariables = [
                     'prompt' => $data['input'] ?? '',
-                    'files' => $absoluteFilePaths,
+                    'files' => $this->resolveAbsoluteFilePaths($allFiles),
                 ];
 
                 return ['poml_rendered' => $this->pomlService->render($templateName, $pomlVariables)];
