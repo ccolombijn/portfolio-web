@@ -11,8 +11,10 @@ use App\Contracts\AIRepositoryInterface;
 use Gemini\Client as GeminiClient;
 use Gemini\Data\Content;
 use Gemini\Enums\Role;
+use Gemini\Resources\GenerativeModel;
 use HelgeSverre\Mistral\Mistral as MistralClient;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
@@ -194,15 +196,78 @@ final class AIRepository implements AIRepositoryInterface
      */
     private function generateWithGemini(array $data): JsonResponse|StreamedResponse
     {
+        $startTime = microtime(true);
         try {
-            $model = $data['model'] ?? config('ai.models.gemini', 'gemini-2.5-flash');
-            $prompt = $this->buildGeminiPrompt($data);
+            $modelName = $data['model'] ?? config('ai.models.gemini', 'gemini-3-flash');
+
+            $basePromptParts = $this->buildBasePromptParts($data);
+            $fileContext = $basePromptParts['file_context'] ?? '';
+            $cachedContentName = null;
+            $isCacheHit = false;
+
+            if (!empty($fileContext)) {
+                $cacheKey = 'gemini_cache_' . md5($fileContext . $modelName);
+                $cachedContentName = Cache::get($cacheKey);
+
+                if (!$cachedContentName) {
+                    try {
+                        $cachedContent = $this->gemini->cachedContents()->create(
+                            model: $modelName,
+                            parts: [$fileContext],
+                            ttl: '3600s',
+                        );
+                        Log::info('Gemini: Created new cached content.', ['cache_key' => $cacheKey, 'cached_content' => $cachedContent]);
+
+                        $cachedContentName = $cachedContent->name ?? null;
+
+                        if (!$cachedContentName && method_exists($cachedContent, 'toArray')) {
+                            $cachedContentName = $cachedContent->toArray()['name'] ?? null;
+                        }
+
+                        if ($cachedContentName) {
+                            Cache::put($cacheKey, $cachedContentName, 3500);
+                        } else {
+                            Log::warning('Gemini: Failed to retrieve cached content name.', ['response' => $cachedContent]);
+                        }
+                    } catch (Throwable $e) {
+                        Log::warning('Gemini: Failed to create cached content (likely too small). Proceeding without cache.', [
+                            'exception' => $e->getMessage(),
+                        ]);
+                    }
+                } else {
+                    $isCacheHit = true;
+                }
+            }
+
+            $prompt = $this->buildGeminiPrompt($data, $cachedContentName !== null, $basePromptParts);
+
+            $generativeModel = $this->gemini->generativeModel($modelName);
+
+            if ($cachedContentName) {
+                $generativeModel = $generativeModel->withCachedContent($cachedContentName);
+            }
 
             if (! empty($data['stream'])) {
-                return $this->streamGeminiResponse($model, $prompt);
+                Log::info('Gemini: Stream started', [
+                    'model' => $modelName,
+                    'cache_hit' => $isCacheHit,
+                    'latency_ms' => round((microtime(true) - $startTime) * 1000, 2),
+                ]);
+                return $this->streamGeminiResponse($generativeModel, $prompt);
             }
-            // Non-streaming response
-            return $this->generateResponse('gemini', $model, $prompt);
+
+            $response = $generativeModel->generateContent($prompt);
+
+            $usage = $response->usageMetadata ?? (method_exists($response, 'usageMetadata') ? $response->usageMetadata() : null);
+
+            Log::info('Gemini: Generation completed', [
+                'model' => $modelName,
+                'cache_hit' => $isCacheHit,
+                'latency_ms' => round((microtime(true) - $startTime) * 1000, 2),
+                'token_usage' => $usage,
+            ]);
+
+            return response()->json(['response' => $response->text()]);
         } catch (Throwable $e) {
             return $this->handleErrorResponse($e, 'Gemini');
         }
@@ -210,12 +275,12 @@ final class AIRepository implements AIRepositoryInterface
     /**
      * Handles streaming generation using the Gemini client.
      */
-    private function streamGeminiResponse(string $model, $prompt): StreamedResponse
+    private function streamGeminiResponse(GenerativeModel $model, $prompt): StreamedResponse
     {
-        Log::debug('Gemini: Starting streaming response.', ['model' => $model, 'prompt' => $prompt]);
+        Log::debug('Gemini: Starting streaming response.');
         $stream = is_array($prompt)
-            ? $this->gemini->generativeModel($model)->streamGenerateContent(...$prompt)
-            : $this->gemini->generativeModel($model)->streamGenerateContent($prompt);
+            ? $model->streamGenerateContent(...$prompt)
+            : $model->streamGenerateContent($prompt);
 
         return $this->streamResponse($stream, fn($chunk) => $chunk->text());
     }
@@ -223,9 +288,9 @@ final class AIRepository implements AIRepositoryInterface
     /**
      * Build prompt with given data for Gemini.
      */
-    private function buildGeminiPrompt(array $data): string|array
+    private function buildGeminiPrompt(array $data, bool $excludeFileContext = false, ?array $basePromptParts = null): string|array
     {
-        $basePromptParts = $this->buildBasePromptParts($data);
+        $basePromptParts = $basePromptParts ?? $this->buildBasePromptParts($data);
 
         if (isset($data['history'])) {
             $history = [];
@@ -235,7 +300,7 @@ final class AIRepository implements AIRepositoryInterface
                 $history[] = Content::parse(part: $basePromptParts['system_prompt'], role: Role::USER);
                 $history[] = Content::parse(part: 'Ok, begrepen.', role: Role::MODEL); // Acknowledge the system prompt
             }
-            if (!empty($basePromptParts['file_context'])) {
+            if (!$excludeFileContext && !empty($basePromptParts['file_context'])) {
                 $history[] = Content::parse(part: $basePromptParts['file_context'], role: Role::USER);
                 $history[] = Content::parse(part: 'Ok, ik heb de bestanden gelezen.', role: Role::MODEL); // Acknowledge the file context
             }
@@ -249,7 +314,12 @@ final class AIRepository implements AIRepositoryInterface
             return [...$history, Content::parse(part: $basePromptParts['prompt'], role: Role::USER)];
         }
 
-        return trim(implode("\n\n", array_filter($basePromptParts)));
+        $parts = $basePromptParts;
+        if ($excludeFileContext) {
+            unset($parts['file_context']);
+        }
+
+        return trim(implode("\n\n", array_filter($parts)));
     }
 
     /**
@@ -482,7 +552,7 @@ final class AIRepository implements AIRepositoryInterface
 
         return trim(implode("\n\n", array_filter($parts)));
     }
-    
+
     use FilePathResolver;
     /**
      * Build base prompt parts including system prompt, file context, and main prompt.
@@ -499,12 +569,12 @@ final class AIRepository implements AIRepositoryInterface
         $prompt = (string) ($data['prompt'] ?? '');
         $isPredefinedPrompt = array_key_exists($prompt, config('ai.prompts', []));
         /** 
-        * Handle predefined prompts and POML templates
-        * @example 
-        * prompt: "code_qa" <-- predefined prompt key; returns poml:ask
-        * input: "Your question about the code goes here."
-        * file_paths: ['path/to/your/codefile.php', 'path/to/another/file.js']
-        */
+         * Handle predefined prompts and POML templates
+         * @example 
+         * prompt: "code_qa" <-- predefined prompt key; returns poml:ask
+         * input: "Your question about the code goes here."
+         * file_paths: ['path/to/your/codefile.php', 'path/to/another/file.js']
+         */
         // If the prompt is a key for a predefined prompt, get the full text.
         if ($isPredefinedPrompt) {
             $promptTemplate = config('ai.prompts.' . $prompt);

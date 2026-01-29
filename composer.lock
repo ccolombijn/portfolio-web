@@ -799,16 +799,16 @@
         },
         {
             "name": "google-gemini-php/client",
-            "version": "2.4.0",
+            "version": "2.7.4",
             "source": {
                 "type": "git",
                 "url": "https://github.com/google-gemini-php/client.git",
-                "reference": "746b7de77cd8c3266892fe72e7367c206977a443"
+                "reference": "d61ebe8e8f7acc2aa66ce2e8a57c23bf32e1e340"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/google-gemini-php/client/zipball/746b7de77cd8c3266892fe72e7367c206977a443",
-                "reference": "746b7de77cd8c3266892fe72e7367c206977a443",
+                "url": "https://api.github.com/repos/google-gemini-php/client/zipball/d61ebe8e8f7acc2aa66ce2e8a57c23bf32e1e340",
+                "reference": "d61ebe8e8f7acc2aa66ce2e8a57c23bf32e1e340",
                 "shasum": ""
             },
             "require": {
@@ -822,8 +822,8 @@
                 "guzzlehttp/psr7": "^2.6.2",
                 "laravel/pint": "^1.18.1",
                 "mockery/mockery": "^1.6.7",
-                "pestphp/pest": "^2.30",
-                "phpstan/phpstan": "^1.10"
+                "pestphp/pest": "^2.32.3",
+                "phpstan/phpstan": "^2.1.32"
             },
             "suggest": {
                 "ext-fileinfo": "Reads upload file size and mime type if not provided"
@@ -850,8 +850,10 @@
             "description": "Gemini API is a supercharged PHP API client that allows you to interact with the Gemini API",
             "keywords": [
                 "Gemini",
+                "banana",
                 "client",
                 "gemini-pro",
+                "google",
                 "language",
                 "natural",
                 "nlp",
@@ -861,22 +863,32 @@
             ],
             "support": {
                 "issues": "https://github.com/google-gemini-php/client/issues",
-                "source": "https://github.com/google-gemini-php/client/tree/2.4.0"
+                "source": "https://github.com/google-gemini-php/client/tree/2.7.4"
             },
-            "time": "2025-06-30T15:05:00+00:00"
+            "funding": [
+                {
+                    "url": "https://github.com/Plytas",
+                    "type": "github"
+                },
+                {
+                    "url": "https://github.com/aydinfatih",
+                    "type": "github"
+                }
+            ],
+            "time": "2025-12-29T17:51:16+00:00"
         },
         {
             "name": "google-gemini-php/laravel",
-            "version": "2.0.1",
+            "version": "2.0.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/google-gemini-php/laravel.git",
-                "reference": "561c3921f449ede58ab89ad3e8017f2eef16aca7"
+                "reference": "0a438aa9aaae3e2ce8d6ca68afcd05f3542071ae"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/google-gemini-php/laravel/zipball/561c3921f449ede58ab89ad3e8017f2eef16aca7",
-                "reference": "561c3921f449ede58ab89ad3e8017f2eef16aca7",
+                "url": "https://api.github.com/repos/google-gemini-php/laravel/zipball/0a438aa9aaae3e2ce8d6ca68afcd05f3542071ae",
+                "reference": "0a438aa9aaae3e2ce8d6ca68afcd05f3542071ae",
                 "shasum": ""
             },
             "require": {
@@ -929,9 +941,19 @@
             ],
             "support": {
                 "issues": "https://github.com/google-gemini-php/laravel/issues",
-                "source": "https://github.com/google-gemini-php/laravel/tree/2.0.1"
+                "source": "https://github.com/google-gemini-php/laravel/tree/2.0.3"
             },
-            "time": "2025-05-12T15:56:40+00:00"
+            "funding": [
+                {
+                    "url": "https://github.com/Plytas",
+                    "type": "github"
+                },
+                {
+                    "url": "https://github.com/aydinfatih",
+                    "type": "github"
+                }
+            ],
+            "time": "2025-11-25T15:34:02+00:00"
         },
         {
             "name": "graham-campbell/result-type",

@@ -45,5 +45,5 @@ return [
     | Here you may specify the default model to use for requests to the
     | Gemini API. This can be overridden on a per-request basis.
     */
-    'default_model' => env('GEMINI_DEFAULT_MODEL', 'gemini-2.5-flash-lite'),
+    'default_model' => env('GEMINI_DEFAULT_MODEL', 'gemini-3-flash-preview'),
 ];
